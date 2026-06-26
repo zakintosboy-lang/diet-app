@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ダイエット管理</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f0faf5; --surface: #fff; --surface2: #e8f5ee;
+  --border: rgba(16,160,90,0.15); --border2: rgba(16,160,90,0.28);
+  --accent: #10a05a; --danger: #d94040; --amber: #d47c10;
+  --text: #0f2e1c; --text2: #4a7a5e; --text3: #8ab89e;
+  --radius: 14px; --radius-sm: 8px; --nav-h: 64px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+.app-shell{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto;}
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;padding:.75rem 1rem calc(var(--nav-h) + 1rem);}
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1rem .5rem;flex-shrink:0;background:var(--bg);border-bottom:.5px solid var(--border);}
+.top-bar h1{font-size:17px;font-weight:700;color:var(--accent);}
+.top-right{display:flex;align-items:center;gap:8px;}
+.top-date{font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;}
+.mode-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;color:#fff;background:var(--accent);}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:var(--nav-h);background:rgba(240,250,245,0.96);backdrop-filter:blur(20px);border-top:.5px solid var(--border);display:flex;align-items:flex-start;padding-top:8px;z-index:100;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--text3);padding:6px 0;font-family:'Noto Sans JP',sans-serif;transition:color .2s;}
+.nav-btn.active{color:var(--accent);}
+.nav-icon svg{width:22px;height:22px;fill:currentColor;display:block;}
+.nav-label{font-size:10px;font-weight:500;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;animation:fadeIn .18s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.card{background:var(--surface);border:.5px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem;margin-bottom:10px;}
+.card-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.mode-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:12px 10px;cursor:pointer;transition:border-color .2s,background .2s;text-align:center;}
+.mode-card.active{border-color:var(--accent);background:var(--surface2);}
+.mode-card:active{opacity:.8;}
+.mode-emoji{font-size:24px;display:block;margin-bottom:4px;}
+.mode-name{font-size:12px;font-weight:700;color:var(--text);}
+.mode-desc{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.4;}
+.mode-tip{background:var(--surface2);border-left:3px solid var(--accent);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:10px 12px;font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.6;}
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.metric{background:var(--surface);border:.5px solid var(--border);border-radius:var(--radius);padding:12px 14px;}
+.metric-label{font-size:11px;color:var(--text2);font-weight:500;margin-bottom:4px;}
+.metric-val{font-size:23px;font-weight:700;color:var(--text);line-height:1;font-family:'DM Mono',monospace;}
+.metric-unit{font-size:12px;font-weight:400;color:var(--text2);}
+.metric-sub{font-size:12px;margin-top:4px;}
+.pos{color:var(--accent);} .neg{color:var(--danger);}
+.ring-section{display:flex;align-items:center;gap:14px;}
+.ring-wrap{position:relative;width:100px;height:100px;flex-shrink:0;}
+.ring-wrap svg{width:100px;height:100px;}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ring-pct{font-size:18px;font-weight:700;color:var(--text);font-family:'DM Mono',monospace;}
+.ring-sub2{font-size:10px;color:var(--text2);}
+.cal-detail{flex:1;display:flex;flex-direction:column;gap:6px;}
+.cal-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;border-bottom:.5px solid var(--border);padding-bottom:5px;}
+.cal-row:last-child{border-bottom:none;padding-bottom:0;}
+.cal-label{color:var(--text2);display:flex;align-items:center;gap:5px;}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.cal-val{font-weight:700;font-family:'DM Mono',monospace;font-size:12px;}
+.pfc-list{display:flex;flex-direction:column;gap:11px;}
+.pfc-item{display:flex;flex-direction:column;gap:4px;}
+.pfc-header{display:flex;justify-content:space-between;font-size:12px;}
+.pfc-name{color:var(--text2);} .pfc-val{color:var(--text);font-family:'DM Mono',monospace;font-weight:500;}
+.bar-bg{background:var(--surface2);border-radius:4px;height:7px;overflow:hidden;}
+.bar-fill{height:7px;border-radius:4px;transition:width .7s cubic-bezier(.4,0,.2,1);max-width:100%;}
+.meal-group{margin-bottom:10px;}
+.meal-label{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:5px;}
+.food-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:.5px solid var(--border);}
+.food-row:last-child{border-bottom:none;}
+.food-info{display:flex;flex-direction:column;gap:1px;}
+.food-name{font-size:13px;color:var(--text);font-weight:500;}
+.food-pfc{font-size:11px;color:var(--text3);}
+.food-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.food-kcal{font-size:13px;font-weight:700;color:var(--text);font-family:'DM Mono',monospace;}
+.del-btn{background:none;border:none;color:var(--text3);font-size:13px;cursor:pointer;padding:3px 5px;}
+.del-btn:active{color:var(--danger);}
+.empty-log{text-align:center;color:var(--text3);font-size:13px;padding:1.2rem 0;line-height:2;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+input[type="text"],input[type="number"],select{background:var(--surface2);border:.5px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:15px;font-family:'Noto Sans JP',sans-serif;padding:10px 12px;width:100%;outline:none;transition:border-color .2s;-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--accent);}
+select option{background:var(--surface2);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.btn{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:12px;font-size:14px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;width:100%;transition:opacity .2s,transform .1s;}
+.btn:active{opacity:.85;transform:scale(.99);}
+.btn-outline{background:transparent;border:.5px solid var(--border2);color:var(--text2);border-radius:var(--radius-sm);padding:10px;font-size:13px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;width:100%;}
+.btn-outline:active{background:var(--surface2);}
+.search-wrap{position:relative;margin-bottom:10px;}
+#search-results{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:.5px solid var(--border2);border-radius:var(--radius-sm);z-index:50;max-height:260px;overflow-y:auto;box-shadow:0 6px 24px rgba(0,0,0,.1);}
+.result-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:.5px solid var(--border);cursor:pointer;}
+.result-item:last-child{border-bottom:none;}
+.result-item:active{background:var(--surface2);}
+.result-name{font-size:13px;color:var(--text);}
+.result-cal{font-size:12px;color:var(--accent);font-family:'DM Mono',monospace;font-weight:500;flex-shrink:0;margin-left:8px;}
+.no-result{padding:12px;font-size:13px;color:var(--text2);text-align:center;}
+.w-entry{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:.5px solid var(--border);font-size:13px;}
+.w-entry:last-child{border-bottom:none;}
+.w-date{color:var(--text2);font-family:'DM Mono',monospace;}
+.w-right{display:flex;align-items:center;gap:10px;}
+.w-val{font-weight:700;font-family:'DM Mono',monospace;color:var(--text);}
+.goal-prog-bar{background:var(--surface2);border-radius:6px;height:10px;overflow:hidden;margin:10px 0;}
+.goal-prog-fill{height:10px;border-radius:6px;background:var(--accent);transition:width .8s ease;}
+.goal-prog-label{font-size:12px;color:var(--text2);text-align:center;}
+.chart-wrap{position:relative;width:100%;height:190px;}
+#tdee-hint{font-size:12px;color:var(--accent);margin-top:4px;min-height:16px;}
+.toast{position:fixed;bottom:calc(var(--nav-h) + 12px);left:50%;transform:translateX(-50%) translateY(16px);background:var(--surface);border:.5px solid var(--border2);border-radius:20px;padding:9px 18px;font-size:13px;color:var(--text);opacity:0;transition:opacity .22s,transform .22s;pointer-events:none;z-index:200;white-space:nowrap;max-width:90vw;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.error{border-color:var(--danger);color:var(--danger);}
+.toast.success{border-color:var(--accent);color:var(--accent);}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="top-bar">
+    <h1 id="app-title">🥗 ダイエット管理</h1>
+    <div class="top-right">
+      <span class="mode-badge" id="mode-badge">標準</span>
+      <span class="top-date" id="today-label"></span>
+    </div>
+  </div>
+
+  <div class="scroll-area">
+
+    <!-- DASHBOARD -->
+    <div id="tab-dashboard" class="tab-panel active">
+      <div class="mode-tip" id="mode-tip"></div>
+      <div class="metrics-grid">
+        <div class="metric"><div class="metric-label">今日のカロリー</div><div class="metric-val"><span id="d-cal">0</span><span class="metric-unit"> kcal</span></div><div class="metric-sub" id="d-cal-rem"></div></div>
+        <div class="metric"><div class="metric-label">体重</div><div class="metric-val" id="d-weight" style="font-size:19px;">– kg</div><div class="metric-sub" id="d-weight-d"></div></div>
+        <div class="metric"><div class="metric-label">BMI</div><div class="metric-val" id="d-bmi">–</div><div class="metric-sub" id="d-bmi-l" style="color:var(--text2);font-size:12px;"></div></div>
+        <div class="metric"><div class="metric-label" id="goal-metric-label">目標まで</div><div class="metric-val" id="d-goal" style="font-size:19px;">– kg</div><div class="metric-sub" id="d-goal-d"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">カロリー達成率</div>
+        <div class="ring-section">
+          <div class="ring-wrap">
+            <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(16,160,90,0.12)" stroke-width="9"/><circle id="cal-ring" cx="50" cy="50" r="40" fill="none" stroke="#10a05a" stroke-width="9" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="251" transform="rotate(-90 50 50)" style="transition:stroke-dashoffset .8s ease;"/></svg>
+            <div class="ring-center"><span class="ring-pct" id="ring-pct">0%</span><span class="ring-sub2">達成率</span></div>
+          </div>
+          <div class="cal-detail">
+            <div class="cal-row"><span class="cal-label"><span class="dot" style="background:#10a05a;"></span>摂取</span><span class="cal-val" id="cd-intake">0 kcal</span></div>
+            <div class="cal-row"><span class="cal-label"><span class="dot" style="background:#2a7de1;"></span>目標</span><span class="cal-val" id="cd-goal">– kcal</span></div>
+            <div class="cal-row"><span class="cal-label"><span class="dot" style="background:#d94040;"></span>残り</span><span class="cal-val" id="cd-rem">– kcal</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">PFCバランス</div>
+        <div class="pfc-list">
+          <div class="pfc-item"><div class="pfc-header"><span class="pfc-name">タンパク質</span><span class="pfc-val" id="pfc-p">0g / 0g</span></div><div class="bar-bg"><div class="bar-fill" id="bar-p" style="width:0%;background:#2a7de1;"></div></div></div>
+          <div class="pfc-item"><div class="pfc-header"><span class="pfc-name">脂質</span><span class="pfc-val" id="pfc-f">0g / 0g</span></div><div class="bar-bg"><div class="bar-fill" id="bar-f" style="width:0%;background:#d47c10;"></div></div></div>
+          <div class="pfc-item"><div class="pfc-header"><span class="pfc-name">炭水化物</span><span class="pfc-val" id="pfc-c">0g / 0g</span></div><div class="bar-bg"><div class="bar-fill" id="bar-c" style="width:0%;background:#10a05a;"></div></div></div>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">今日の食事</div><div id="today-log"><div class="empty-log">まだ記録がありません<br><small>「食事追加」タブから記録しましょう</small></div></div></div>
+      <div class="card"><div class="card-title">体重推移</div><div class="chart-wrap"><canvas id="weight-chart"></canvas></div></div>
+    </div>
+
+    <!-- FOOD -->
+    <div id="tab-food" class="tab-panel">
+      <div class="card">
+        <div class="card-title">食品を検索（40種類以上）</div>
+        <div class="search-wrap"><input type="text" id="f-search" placeholder="例：ご飯、チキン、バナナ…" oninput="onFoodSearch(event)" autocomplete="off"><div id="search-results"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">詳細・手動入力</div>
+        <div style="display:flex;flex-direction:column;gap:11px;">
+          <div class="form-group"><label>食品名</label><input type="text" id="f-name" placeholder="例：ご飯（茶碗1杯）"></div>
+          <div class="form-group"><label>食事タイミング</label><select id="f-meal"><option value="朝食">朝食</option><option value="昼食">昼食</option><option value="夕食" selected>夕食</option><option value="間食">間食</option></select></div>
+          <div class="form-row">
+            <div class="form-group"><label>カロリー (kcal)</label><input type="number" id="f-cal" placeholder="252" min="0"></div>
+            <div class="form-group"><label>タンパク質 (g)</label><input type="number" id="f-protein" placeholder="4" min="0" step="0.1"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>脂質 (g)</label><input type="number" id="f-fat" placeholder="0.5" min="0" step="0.1"></div>
+            <div class="form-group"><label>炭水化物 (g)</label><input type="number" id="f-carb" placeholder="55" min="0" step="0.1"></div>
+          </div>
+          <button class="btn" onclick="addFood()">記録する</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEIGHT -->
+    <div id="tab-weight" class="tab-panel">
+      <div class="card">
+        <div class="card-title">体重を記録</div>
+        <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:12px;">
+          <div class="form-group" style="flex:1;"><label>体重 (kg)</label><input type="number" id="w-input" placeholder="65.0" step="0.1" min="20" max="300"></div>
+          <button class="btn" style="width:auto;padding:10px 20px;" onclick="addWeight()">記録</button>
+        </div>
+        <div id="w-entries"><div class="empty-log">まだ記録がありません</div></div>
+      </div>
+      <div class="card"><div class="card-title">体重グラフ（直近30日）</div><div class="chart-wrap"><canvas id="w-chart2"></canvas></div></div>
+    </div>
+
+    <!-- GOALS -->
+    <div id="tab-goals" class="tab-panel">
+      <div class="card">
+        <div class="card-title">モードを選択</div>
+        <div class="mode-grid" id="mode-grid"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">プロフィール</div>
+        <div style="display:flex;flex-direction:column;gap:11px;">
+          <div class="form-row">
+            <div class="form-group"><label>身長 (cm)</label><input type="number" id="g-height" placeholder="165"></div>
+            <div class="form-group"><label>現在の体重 (kg)</label><input type="number" id="g-weight" placeholder="70" step="0.1"></div>
+          </div>
+          <div class="form-group"><label>目標体重 (kg)</label><input type="number" id="g-target" placeholder="60" step="0.1"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">栄養目標</div>
+        <div style="display:flex;flex-direction:column;gap:11px;">
+          <div class="form-group"><label>1日カロリー目標 (kcal)</label><input type="number" id="g-kcal" placeholder="1600"></div>
+          <div id="tdee-hint"></div>
+          <button class="btn-outline" onclick="autoCalcKcal()">⚡ モードに合わせて自動計算</button>
+          <div class="form-row">
+            <div class="form-group"><label>タンパク質 (g)</label><input type="number" id="g-protein" placeholder="80"></div>
+            <div class="form-group"><label>脂質 (g)</label><input type="number" id="g-fat" placeholder="50"></div>
+          </div>
+          <div class="form-group"><label>炭水化物 (g)</label><input type="number" id="g-carb" placeholder="200"></div>
+          <button class="btn" onclick="saveGoals()">保存する</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">目標達成度</div>
+        <div class="goal-prog-bar"><div class="goal-prog-fill" id="goal-bar" style="width:0%;"></div></div>
+        <p class="goal-prog-label" id="goal-bar-label">目標を設定してください</p>
+      </div>
+      <div class="card">
+        <div class="card-title">エクスポート</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button class="btn" onclick="exportExcel()">📊 Excelにエクスポート (.xlsx)</button>
+          <button class="btn-outline" onclick="exportCSV()">📄 CSVにエクスポート</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">データ管理</div>
+        <button class="btn-outline" style="color:#d94040;border-color:rgba(217,64,64,0.3);"
+          onclick="if(confirm('全データを削除しますか？')){localStorage.removeItem('diet_app_v3');location.reload();}">
+          🗑️ データをリセット
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">
+      <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg></div>
+      <span class="nav-label">ホーム</span>
+    </button>
+    <button class="nav-btn" data-tab="food" onclick="switchTab('food')">
+      <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-1.97v4.05h-4.97l.3 2.34c1.71.47 3.31 1.32 4.27 2.26 1.44 1.42 2.43 2.89 2.43 5.29v8.05zM1 21.99V21h15.03v.99c0 .55-.45 1-1.01 1H2.01c-.56 0-1.01-.45-1.01-1zm15.03-7c0-8-15.03-8-15.03 0h15.03zM1.02 17h15v2h-15z"/></svg></div>
+      <span class="nav-label">食事追加</span>
+    </button>
+    <button class="nav-btn" data-tab="weight" onclick="switchTab('weight')">
+      <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/></svg></div>
+      <span class="nav-label">体重</span>
+    </button>
+    <button class="nav-btn" data-tab="goals" onclick="switchTab('goals')">
+      <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg></div>
+      <span class="nav-label">目標・モード</span>
+    </button>
+  </nav>
+</div>
+<div id="toast" class="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const MODES = {
+  standard: { id:'standard', emoji:'🥗', name:'標準ダイエット', desc:'無理なく痩せる基本モード', badge:'標準', tip:'1日300〜500kcal減らすと、1ヶ月で約1〜2kg減量できます。急ぎすぎず継続を大切に。', calcKcal:(w,h)=>(10*w+6.25*h-5*30-161)*1.55-300, proteinMult:1.2, fatPct:.25, goalLabel:'目標まで' },
+  muscle:   { id:'muscle',   emoji:'💪', name:'筋トレ増量',     desc:'ムキムキを目指す！',       badge:'増量',   tip:'筋肉をつけるには少し多めに食べることが大切。タンパク質を体重×2g以上、カロリーはTDEE+300を目標に。', calcKcal:(w,h)=>(10*w+6.25*h-5*30-161)*1.725+300, proteinMult:2.0, fatPct:.25, goalLabel:'目標体重まで' },
+  cut:      { id:'cut',      emoji:'🔥', name:'筋トレ減量',     desc:'筋肉を残しながら絞る',     badge:'減量',   tip:'タンパク質を高く保ちながらカロリーを少し減らすことで、筋肉を残しつつ脂肪を落とします。', calcKcal:(w,h)=>(10*w+6.25*h-5*30-161)*1.725-400, proteinMult:2.2, fatPct:.20, goalLabel:'目標まで' },
+  postpartum:{ id:'postpartum', emoji:'🤱', name:'産後ケア',    desc:'母乳育児・産後の体づくり', badge:'産後',   tip:'産後・授乳中は通常より350〜500kcal多く必要です。タンパク質・鉄分・カルシウムを意識して。無理な制限は禁物！', calcKcal:(w,h)=>(10*w+6.25*h-5*30-161)*1.55+450, proteinMult:1.5, fatPct:.30, goalLabel:'産前体重まで' },
+  lowcarb:  { id:'lowcarb',  emoji:'🥩', name:'糖質制限',       desc:'炭水化物を減らして痩せる', badge:'糖質制限', tip:'1日の糖質を50〜100gに抑えます。その分タンパク質・良質な脂質を多めに。野菜はたっぷりOK。', calcKcal:(w,h)=>(10*w+6.25*h-5*30-161)*1.55-200, proteinMult:1.6, fatPct:.40, carbOverride:80, goalLabel:'目標まで' },
+  maintain: { id:'maintain', emoji:'⚖️', name:'体重維持',       desc:'リバウンドを防ぐ',         badge:'維持',   tip:'目標体重を達成したらこのモードへ。TDEE通りに食べて体重をキープしましょう。', calcKcal:(w,h)=>(10*w+6.25*h-5*30-161)*1.55, proteinMult:1.2, fatPct:.25, goalLabel:'維持目標' },
+};
+
+const DB_KEY = 'diet_app_v3';
+const defaultState = { foods:[], weights:[], mode:'standard', goals:{height:165,weight:70,target:63,kcal:1600,protein:80,fat:50,carb:200} };
+function loadState(){try{const r=localStorage.getItem(DB_KEY);return r?{...defaultState,...JSON.parse(r)}:{...defaultState};}catch{return{...defaultState};}}
+function saveState(){try{localStorage.setItem(DB_KEY,JSON.stringify(state));}catch{}}
+let state=loadState();
+
+const FOOD_DB=[
+  {name:'ご飯（茶碗1杯・150g）',cal:252,p:3.8,f:0.5,c:55.7},{name:'おにぎり（梅）',cal:170,p:3,f:0.5,c:37},{name:'おにぎり（鮭）',cal:185,p:5,f:1.5,c:37},
+  {name:'食パン（6枚切り1枚）',cal:158,p:5.6,f:2.5,c:28},{name:'うどん（1玉）',cal:240,p:7,f:1,c:50},{name:'ざるそば（1人前）',cal:294,p:13,f:1,c:58},
+  {name:'ラーメン（醤油）',cal:450,p:17,f:14,c:65},{name:'パスタ（ナポリタン）',cal:480,p:14,f:15,c:72},{name:'目玉焼き（1個）',cal:99,p:6.2,f:7.6,c:0.2},
+  {name:'ゆで卵（1個）',cal:77,p:6.4,f:5.1,c:0.3},{name:'サラダチキン（100g）',cal:105,p:22,f:1,c:0},{name:'鶏胸肉（100g・焼き）',cal:165,p:26,f:5,c:0},
+  {name:'豚ロース（100g・焼き）',cal:263,p:19,f:19,c:0},{name:'牛もも肉（100g・焼き）',cal:196,p:21,f:11,c:0},{name:'焼き魚（鮭・1切れ）',cal:176,p:20,f:9,c:0},
+  {name:'マグロ刺身（5切れ）',cal:125,p:26,f:1.4,c:0.1},{name:'豆腐（木綿・100g）',cal:73,p:7,f:4.2,c:1.6},{name:'納豆（1パック・45g）',cal:90,p:7.4,f:4.5,c:5.4},
+  {name:'ヨーグルト（無糖・100g）',cal:62,p:3.6,f:3,c:4.9},{name:'牛乳（200ml）',cal:134,p:6.6,f:7.6,c:9.6},{name:'バナナ（1本）',cal:86,p:1.1,f:0.2,c:22.5},
+  {name:'りんご（1個）',cal:138,p:0.3,f:0.2,c:37},{name:'みかん（1個）',cal:34,p:0.5,f:0.1,c:8.7},{name:'アボカド（1個）',cal:187,p:2.5,f:17.5,c:7.5},
+  {name:'サラダ（野菜のみ）',cal:30,p:1.5,f:0.3,c:5},{name:'ブロッコリー（100g）',cal:33,p:4.3,f:0.5,c:5.2},{name:'コーヒー（ブラック）',cal:4,p:0.3,f:0,c:0.7},
+  {name:'緑茶（1杯）',cal:2,p:0.1,f:0,c:0.3},{name:'牛丼（並盛）',cal:640,p:21,f:20,c:88},{name:'カレーライス',cal:730,p:17,f:22,c:110},
+  {name:'ハンバーガー',cal:320,p:15,f:13,c:37},{name:'フライドポテト（M）',cal:380,p:4,f:19,c:48},{name:'ポテトチップス（1袋・60g）',cal:327,p:3.5,f:21,c:32},
+  {name:'チョコレート（1枚・50g）',cal:275,p:3,f:16,c:32},{name:'アイスクリーム（カップ）',cal:180,p:3,f:9,c:23},{name:'プロテインバー',cal:220,p:20,f:7,c:22},
+  {name:'プロテイン（1杯）',cal:120,p:24,f:1.5,c:5},{name:'スポーツドリンク（500ml）',cal:120,p:0,f:0,c:30},{name:'オレンジジュース（200ml）',cal:84,p:1,f:0.2,c:21},
+  {name:'ビール（350ml）',cal:140,p:1.1,f:0,c:10.9},
+];
+
+function today(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function formatDate(s){if(!s)return'';const p=s.split('-');return`${parseInt(p[1])}/${parseInt(p[2])}`;}
+function todayFoods(){return state.foods.filter(f=>f.date===today());}
+function currentMode(){return MODES[state.mode]||MODES.standard;}
+
+function switchTab(tab){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.querySelector(`.nav-btn[data-tab="${tab}"]`).classList.add('active');
+  if(tab==='dashboard')renderDashboard();
+  if(tab==='weight')renderWeightTab();
+  if(tab==='goals')renderGoalsTab();
+}
+
+function renderModeGrid(){
+  document.getElementById('mode-grid').innerHTML=Object.values(MODES).map(m=>
+    `<div class="mode-card ${state.mode===m.id?'active':''}" onclick="setMode('${m.id}')">
+      <span class="mode-emoji">${m.emoji}</span>
+      <div class="mode-name">${m.name}</div>
+      <div class="mode-desc">${m.desc}</div>
+    </div>`
+  ).join('');
+}
+
+function setMode(modeId){
+  state.mode=modeId; saveState(); renderModeGrid(); applyModeTheme();
+  showToast(MODES[modeId].emoji+' '+MODES[modeId].name+'に変更しました');
+}
+
+function applyModeTheme(){
+  const m=currentMode();
+  document.getElementById('mode-badge').textContent=m.badge;
+  document.getElementById('app-title').textContent=m.emoji+' ダイエット管理';
+  document.getElementById('mode-tip').textContent='💡 '+m.tip;
+  const gl=document.getElementById('goal-metric-label');
+  if(gl)gl.textContent=m.goalLabel;
+}
+
+let searchTimer=null;
+function onFoodSearch(e){
+  const q=e.target.value.trim();clearTimeout(searchTimer);
+  if(!q){document.getElementById('search-results').innerHTML='';return;}
+  searchTimer=setTimeout(()=>{
+    const matches=FOOD_DB.filter(f=>f.name.includes(q)).slice(0,8);
+    const el=document.getElementById('search-results');
+    if(!matches.length){el.innerHTML='<div class="no-result">見つかりません</div>';return;}
+    el.innerHTML=matches.map((f,i)=>`<div class="result-item" onclick="selectFood(${i},'${encodeURIComponent(q)}')"><span class="result-name">${f.name}</span><span class="result-cal">${f.cal} kcal</span></div>`).join('');
+  },150);
+}
+function selectFood(i,qEnc){
+  const q=decodeURIComponent(qEnc);
+  const f=FOOD_DB.filter(x=>x.name.includes(q))[i];if(!f)return;
+  document.getElementById('f-name').value=f.name;
+  document.getElementById('f-cal').value=f.cal;
+  document.getElementById('f-protein').value=f.p;
+  document.getElementById('f-fat').value=f.f;
+  document.getElementById('f-carb').value=f.c;
+  document.getElementById('f-search').value='';
+  document.getElementById('search-results').innerHTML='';
+}
+
+function addFood(){
+  const name=document.getElementById('f-name').value.trim();
+  const cal=parseFloat(document.getElementById('f-cal').value)||0;
+  const p=parseFloat(document.getElementById('f-protein').value)||0;
+  const f=parseFloat(document.getElementById('f-fat').value)||0;
+  const c=parseFloat(document.getElementById('f-carb').value)||0;
+  const meal=document.getElementById('f-meal').value;
+  if(!name||!cal){showToast('食品名とカロリーを入力してください','error');return;}
+  state.foods.push({name,cal,p,f,c,meal,date:today(),id:Date.now()});
+  saveState();
+  ['f-name','f-cal','f-protein','f-fat','f-carb'].forEach(id=>document.getElementById(id).value='');
+  showToast(name+' を記録しました');renderDashboard();
+}
+function deleteFood(id){state.foods=state.foods.filter(f=>f.id!==id);saveState();renderDashboard();}
+
+function addWeight(){
+  const val=parseFloat(document.getElementById('w-input').value);
+  if(isNaN(val)||val<20||val>300){showToast('正しい体重を入力してください','error');return;}
+  const ex=state.weights.find(w=>w.date===today());
+  if(ex)ex.val=val;else state.weights.unshift({val,date:today(),id:Date.now()});
+  state.weights.sort((a,b)=>b.date.localeCompare(a.date));
+  saveState();document.getElementById('w-input').value='';
+  showToast(val+'kg を記録しました');renderWeightTab();renderDashboard();
+}
+
+function saveGoals(){
+  state.goals={height:parseFloat(document.getElementById('g-height').value)||165,weight:parseFloat(document.getElementById('g-weight').value)||70,target:parseFloat(document.getElementById('g-target').value)||63,kcal:parseFloat(document.getElementById('g-kcal').value)||1600,protein:parseFloat(document.getElementById('g-protein').value)||80,fat:parseFloat(document.getElementById('g-fat').value)||50,carb:parseFloat(document.getElementById('g-carb').value)||200};
+  saveState();renderDashboard();showToast('目標を保存しました');
+}
+
+function autoCalcKcal(){
+  const m=currentMode();
+  const h=parseFloat(document.getElementById('g-height').value)||165;
+  const w=parseFloat(document.getElementById('g-weight').value)||70;
+  const kcal=Math.round(m.calcKcal(w,h));
+  const protein=Math.round(w*m.proteinMult);
+  const fat=Math.round(kcal*m.fatPct/9);
+  const carb=m.carbOverride!==undefined?m.carbOverride:Math.max(0,Math.round((kcal-protein*4-fat*9)/4));
+  const bmr=Math.round(10*w+6.25*h-5*30-161);
+  document.getElementById('g-kcal').value=kcal;
+  document.getElementById('g-protein').value=protein;
+  document.getElementById('g-fat').value=fat;
+  document.getElementById('g-carb').value=carb;
+  document.getElementById('tdee-hint').textContent=`${m.emoji} ${m.name}：基礎代謝${bmr} kcal → 目標 ${kcal} kcal`;
+}
+
+let wC1=null,wC2=null;
+
+function renderDashboard(){
+  const g=state.goals;
+  const tf=todayFoods();
+  const totalCal=Math.round(tf.reduce((s,f)=>s+f.cal,0));
+  const totalP=Math.round(tf.reduce((s,f)=>s+f.p,0)*10)/10;
+  const totalF=Math.round(tf.reduce((s,f)=>s+f.f,0)*10)/10;
+  const totalC=Math.round(tf.reduce((s,f)=>s+f.c,0)*10)/10;
+  const remain=g.kcal-totalCal;
+  const pct=g.kcal>0?Math.min(100,Math.round(totalCal/g.kcal*100)):0;
+  const curW=state.weights.length?state.weights[0].val:null;
+  const bmi=curW&&g.height?Math.round(curW/((g.height/100)**2)*10)/10:null;
+  const bmiLabel=bmi?(bmi<18.5?'低体重':bmi<25?'標準':bmi<30?'過体重':'肥満'):'';
+  const toGoal=curW?Math.round(Math.abs(curW-g.target)*10)/10:null;
+
+  applyModeTheme();
+  document.getElementById('d-cal').textContent=totalCal;
+  document.getElementById('d-cal-rem').innerHTML=remain>=0?`<span class="pos">残り ${remain} kcal</span>`:`<span class="neg">${Math.abs(remain)} kcal オーバー</span>`;
+  document.getElementById('d-weight').textContent=curW?curW+' kg':'– kg';
+  let wDelta='';
+  if(state.weights.length>=2){const d=Math.round((state.weights[0].val-state.weights[1].val)*10)/10;wDelta=`<span class="${d<=0?'pos':'neg'}">${d>0?'+':''}${d}kg</span>`;}
+  document.getElementById('d-weight-d').innerHTML=wDelta;
+  document.getElementById('d-bmi').textContent=bmi||'–';
+  document.getElementById('d-bmi-l').textContent=bmiLabel;
+  document.getElementById('d-goal').textContent=toGoal!==null?toGoal+' kg':'– kg';
+  document.getElementById('d-goal-d').innerHTML=toGoal===0?'<span class="pos">目標達成！🎉</span>':'';
+
+  const offset=251-(251*pct/100);
+  const ring=document.getElementById('cal-ring');
+  ring.style.strokeDashoffset=offset;ring.style.stroke=pct>100?'#d94040':'#10a05a';
+  document.getElementById('ring-pct').textContent=pct+'%';
+  document.getElementById('cd-intake').textContent=totalCal+' kcal';
+  document.getElementById('cd-goal').textContent=g.kcal+' kcal';
+  document.getElementById('cd-rem').textContent=remain+' kcal';
+
+  const sb=(id,bar,val,max)=>{document.getElementById(id).textContent=`${val}g / ${max}g`;document.getElementById(bar).style.width=Math.min(100,max>0?Math.round(val/max*100):0)+'%';};
+  sb('pfc-p','bar-p',totalP,g.protein);sb('pfc-f','bar-f',totalF,g.fat);sb('pfc-c','bar-c',totalC,g.carb);
+
+  const logEl=document.getElementById('today-log');
+  if(!tf.length){logEl.innerHTML='<div class="empty-log">まだ記録がありません<br><small>「食事追加」タブから記録しましょう</small></div>';}
+  else{
+    let html='';
+    ['朝食','昼食','夕食','間食'].forEach(meal=>{
+      const mf=tf.filter(f=>f.meal===meal);if(!mf.length)return;
+      html+=`<div class="meal-group"><span class="meal-label">${meal}</span>`;
+      mf.forEach(f=>{html+=`<div class="food-row"><div class="food-info"><span class="food-name">${f.name}</span><span class="food-pfc">P${f.p}g F${f.f}g C${f.c}g</span></div><div class="food-right"><span class="food-kcal">${f.cal} kcal</span><button class="del-btn" onclick="deleteFood(${f.id})">✕</button></div></div>`;});
+      html+='</div>';
+    });
+    logEl.innerHTML=html;
+  }
+
+  const canvas=document.getElementById('weight-chart');
+  if(canvas&&typeof Chart!=='undefined'){
+    const data=[...state.weights].slice(0,14).reverse();
+    if(wC1){wC1.destroy();wC1=null;}
+    wC1=new Chart(canvas,{type:'line',data:{labels:data.map(w=>formatDate(w.date)),datasets:[{data:data.map(w=>w.val),borderColor:'#10a05a',backgroundColor:'rgba(16,160,90,0.08)',tension:.4,fill:true,pointBackgroundColor:'#10a05a',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#4a7a5e',font:{size:11}}},x:{grid:{display:false},ticks:{color:'#4a7a5e',font:{size:11}}}}}});
+  }
+}
+
+function renderWeightTab(){
+  const el=document.getElementById('w-entries');
+  if(!state.weights.length){el.innerHTML='<div class="empty-log">まだ記録がありません</div>';}
+  else{el.innerHTML=state.weights.slice(0,14).map((w,i)=>{const prev=state.weights[i+1];const diff=prev?Math.round((w.val-prev.val)*10)/10:null;const dh=diff!==null?`<span class="${diff<=0?'pos':'neg'}">${diff>0?'+':''}${diff}kg</span>`:'';return`<div class="w-entry"><span class="w-date">${formatDate(w.date)}</span><div class="w-right"><span class="w-val">${w.val}kg</span>${dh}</div></div>`;}).join('');}
+  const canvas=document.getElementById('w-chart2');
+  if(!canvas||typeof Chart==='undefined')return;
+  const data=[...state.weights].slice(0,30).reverse();
+  if(wC2){wC2.destroy();wC2=null;}
+  if(!data.length)return;
+  wC2=new Chart(canvas,{type:'line',data:{labels:data.map(w=>formatDate(w.date)),datasets:[{data:data.map(w=>w.val),borderColor:'#2a7de1',backgroundColor:'rgba(42,125,225,0.08)',tension:.4,fill:true,pointBackgroundColor:'#2a7de1',pointRadius:4},{data:data.map(()=>state.goals.target),borderColor:'rgba(217,64,64,0.45)',borderDash:[6,4],pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{color:'#4a7a5e',font:{size:11}}},x:{grid:{display:false},ticks:{color:'#4a7a5e',font:{size:11},maxTicksLimit:8}}}}});
+}
+
+function renderGoalsTab(){
+  const g=state.goals;
+  document.getElementById('g-height').value=g.height;document.getElementById('g-weight').value=g.weight;document.getElementById('g-target').value=g.target;document.getElementById('g-kcal').value=g.kcal;document.getElementById('g-protein').value=g.protein;document.getElementById('g-fat').value=g.fat;document.getElementById('g-carb').value=g.carb;
+  const curW=state.weights.length?state.weights[0].val:g.weight;
+  const total=Math.abs(g.weight-g.target);const done=Math.abs(g.weight-curW);
+  const pct=total>0?Math.min(100,Math.round(done/total*100)):0;
+  document.getElementById('goal-bar').style.width=pct+'%';
+  document.getElementById('goal-bar-label').textContent=`${g.weight}kg → 現在 ${curW}kg → 目標 ${g.target}kg（${pct}%達成）`;
+  renderModeGrid();
+}
+
+function showToast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.classList.remove('show'),2500);}
+
+// ===== EXCEL EXPORT =====
+function exportExcel(){
+  if(typeof XLSX==='undefined'){showToast('読み込み中...もう一度お試しください','error');return;}
+  const g=state.goals;
+  const m=currentMode();
+  const wb=XLSX.utils.book_new();
+
+  // --- シート1: サマリー ---
+  const daily={};
+  state.foods.forEach(f=>{
+    if(!daily[f.date])daily[f.date]={cal:0,p:0,f:0,c:0,count:0};
+    daily[f.date].cal+=f.cal; daily[f.date].p+=f.p;
+    daily[f.date].f+=f.f; daily[f.date].c+=f.c; daily[f.date].count++;
+  });
+  const summaryRows=[
+    ['🥗 ダイエット管理 サマリー','','','',''],
+    [`出力日: ${today()}　モード: ${m.name}`,'','','',''],
+    ['','','','',''],
+    ['【目標設定】','','','',''],
+    ['身長',g.height+'cm','カロリー目標',g.kcal+'kcal',''],
+    ['開始体重',g.weight+'kg','タンパク質目標',g.protein+'g',''],
+    ['目標体重',g.target+'kg','脂質目標',g.fat+'g',''],
+    ['残り',Math.round((g.weight-g.target)*10)/10+'kg','炭水化物目標',g.carb+'g',''],
+    ['','','','',''],
+    ['【日別サマリー】','','','',''],
+    ['日付','カロリー(kcal)','タンパク質(g)','脂質(g)','炭水化物(g)'],
+    ...Object.entries(daily).sort().map(([date,v])=>[
+      date,Math.round(v.cal),Math.round(v.p*10)/10,Math.round(v.f*10)/10,Math.round(v.c*10)/10
+    ]),
+    ['合計',
+      Math.round(Object.values(daily).reduce((s,v)=>s+v.cal,0)),
+      Math.round(Object.values(daily).reduce((s,v)=>s+v.p,0)*10)/10,
+      Math.round(Object.values(daily).reduce((s,v)=>s+v.f,0)*10)/10,
+      Math.round(Object.values(daily).reduce((s,v)=>s+v.c,0)*10)/10,
+    ]
+  ];
+  const ws1=XLSX.utils.aoa_to_sheet(summaryRows);
+  ws1['!cols']=[{wch:18},{wch:16},{wch:16},{wch:16},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws1,'サマリー');
+
+  // --- シート2: 食事ログ ---
+  const foodRows=[
+    ['日付','食事タイミング','食品名','カロリー(kcal)','タンパク質(g)','脂質(g)','炭水化物(g)'],
+    ...state.foods.map(f=>[f.date,f.meal,f.name,f.cal,f.p,f.f,f.c]),
+    ['合計','','',
+      Math.round(state.foods.reduce((s,f)=>s+f.cal,0)),
+      Math.round(state.foods.reduce((s,f)=>s+f.p,0)*10)/10,
+      Math.round(state.foods.reduce((s,f)=>s+f.f,0)*10)/10,
+      Math.round(state.foods.reduce((s,f)=>s+f.c,0)*10)/10,
+    ]
+  ];
+  const ws2=XLSX.utils.aoa_to_sheet(foodRows);
+  ws2['!cols']=[{wch:14},{wch:12},{wch:24},{wch:14},{wch:14},{wch:10},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws2,'食事ログ');
+
+  // --- シート3: 体重記録 ---
+  const weightRows=[
+    ['日付','体重(kg)','前日比(kg)','目標まで(kg)'],
+    ...state.weights.slice().reverse().map((w,i,arr)=>{
+      const prev=arr[i-1];
+      const diff=prev?Math.round((w.val-prev.val)*10)/10:'';
+      const remain=Math.round((w.val-g.target)*10)/10;
+      return [w.date,w.val,diff,remain];
+    })
+  ];
+  const ws3=XLSX.utils.aoa_to_sheet(weightRows);
+  ws3['!cols']=[{wch:14},{wch:12},{wch:12},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws3,'体重記録');
+
+  const filename=`ダイエット記録_${today()}.xlsx`;
+  XLSX.writeFile(wb,filename);
+  showToast('Excelをダウンロードしました！');
+}
+
+// ===== CSV EXPORT =====
+function exportCSV(){
+  const rows=[
+    ['日付','食事タイミング','食品名','カロリー(kcal)','タンパク質(g)','脂質(g)','炭水化物(g)'],
+    ...state.foods.map(f=>[f.date,f.meal,f.name,f.cal,f.p,f.f,f.c])
+  ];
+  const csv='\uFEFF'+rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`食事ログ_${today()}.csv`;
+  a.click();
+  showToast('CSVをダウンロードしました！');
+}
+
+const d=new Date();
+document.getElementById('today-label').textContent=`${d.getMonth()+1}月${d.getDate()}日`;
+renderDashboard();
+</script>
+</body>
+</html>
