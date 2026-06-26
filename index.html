@@ -423,28 +423,49 @@ select option { background: #fff; }
 .search-input-box { position: relative; }
 .search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; fill: var(--text3); pointer-events: none; }
 #f-search { padding-left: 40px; }
+/* 通常フロー表示（入力欄の下に自然展開・被らない） */
 #search-results {
-  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
-  background: #fff; border: 1px solid var(--border2);
-  border-radius: var(--radius-sm); z-index: 60;
-  max-height: 300px; overflow-y: auto;
-  box-shadow: var(--shadow-lg);
+  margin-top: 10px;
+  max-height: 320px; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-sm);
+}
+#search-results:not(:empty) {
+  border: 0.5px solid var(--border);
+  background: var(--surface3);
+  padding: 4px;
   animation: dropIn .2s var(--ease-out);
 }
-@keyframes dropIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes dropIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+/* 候補グループの見出し */
+.result-group-head {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 10.5px; font-weight: 700; color: var(--text2);
+  letter-spacing: 0.6px; text-transform: uppercase;
+  padding: 9px 11px 6px;
+}
+.result-group-head .ai-tag {
+  background: linear-gradient(135deg,#8b5cf6,#6d28d9); color:#fff;
+  font-size: 9px; padding: 2px 7px; border-radius: 10px; letter-spacing: 0;
+}
 .result-item {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 11px 14px; border-bottom: 0.5px solid var(--border); cursor: pointer;
-  transition: background .12s;
+  padding: 13px 12px; border-radius: var(--radius-xs); cursor: pointer;
+  transition: background .12s; background: #fff; margin-bottom: 4px;
+  min-height: 54px;
 }
-.result-item:last-child { border-bottom: none; }
+.result-item:last-child { margin-bottom: 0; }
 .result-item:active { background: var(--surface2); }
-.result-left { display: flex; align-items: center; gap: 9px; min-width: 0; }
-.result-cat-icon { font-size: 16px; flex-shrink: 0; }
-.result-name { font-size: 13.5px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.result-meta { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
-.result-cal { font-size: 12px; color: var(--accent); font-family: 'DM Mono', monospace; font-weight: 700; flex-shrink: 0; margin-left: 10px; }
-.no-result { padding: 16px; font-size: 13px; color: var(--text2); text-align: center; }
+.result-item.ai-item { background: linear-gradient(135deg, rgba(139,92,246,0.05), rgba(109,40,217,0.03)); border: 0.5px solid rgba(139,92,246,0.15); }
+.result-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.result-cat-icon { font-size: 19px; flex-shrink: 0; }
+.result-name { font-size: 14px; color: var(--text); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.result-meta { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; margin-top: 1px; }
+.result-cal { font-size: 13px; color: var(--accent); font-family: 'DM Mono', monospace; font-weight: 700; flex-shrink: 0; margin-left: 10px; text-align: right; }
+.result-cal small { display:block; font-size: 9px; color: var(--text3); font-weight: 400; }
+.ai-est-badge { font-size: 9px; color: #6d28d9; font-weight: 700; }
+.no-result { padding: 16px; font-size: 13px; color: var(--text2); text-align: center; line-height: 1.6; }
+.ai-disclaimer { font-size: 10.5px; color: var(--text3); text-align: center; padding: 8px 10px 4px; line-height: 1.5; }
 
 /* カテゴリフィルタ */
 .cat-scroll { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 11px; -webkit-overflow-scrolling: touch; }
@@ -496,7 +517,9 @@ select option { background: #fff; }
   padding: 13px 15px;
   animation: foodIn .3s var(--ease-out);
 }
-.confirm-head { font-size: 10px; font-weight: 700; color: var(--text2); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 6px; }
+.confirm-head-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.confirm-head { font-size: 10px; font-weight: 700; color: var(--text2); letter-spacing: 0.8px; text-transform: uppercase; }
+.confirm-ai-badge { font-size: 9.5px; font-weight: 700; color:#fff; background: linear-gradient(135deg,#8b5cf6,#6d28d9); padding: 3px 9px; border-radius: 10px; }
 .confirm-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .confirm-macros { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 8px; }
 .confirm-macro { display: flex; flex-direction: column; gap: 2px; }
@@ -902,7 +925,7 @@ select option { background: #fff; }
     <!-- ============ 食事追加 ============ -->
     <div id="tab-food" class="tab-panel">
 
-      <!-- 写真で読み取る -->
+      <!-- ① 写真で読み取る -->
       <div class="card">
         <div class="card-title">📷 写真で記録</div>
         <div id="photo-area">
@@ -917,20 +940,21 @@ select option { background: #fff; }
         <div id="photo-result-area" style="display:none;"></div>
       </div>
 
-      <!-- 検索 -->
+      <!-- ②③ 食品名を検索・自由入力 → AI推定候補 -->
       <div class="card">
-        <div class="card-title">🔍 食品を検索</div>
+        <div class="card-title">🔍 食品を検索・自由入力</div>
         <div class="search-wrap">
           <div class="search-input-box">
             <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
-            <input type="text" id="f-search" placeholder="食品名・ローマ字・略称でもOK" oninput="onFoodSearch(event)" autocomplete="off">
+            <input type="text" id="f-search" placeholder="例：おからハンバーグ、torimune、低糖質カレー" oninput="onFoodSearch(event)" autocomplete="off">
           </div>
           <div id="search-results"></div>
         </div>
         <div class="cat-scroll" id="cat-scroll" style="margin-top:11px;"></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5;">💡 登録されていない自炊メニューも入力すると、AIが栄養を概算します</div>
       </div>
 
-      <!-- クイックアクセス：最近・お気に入り・よく食べる -->
+      <!-- ④⑤ 最近・よく食べる・お気に入り・おすすめ -->
       <div class="card">
         <div class="chart-tabs" id="quick-tabs">
           <button class="chart-tab active" onclick="switchQuick('recent',event)">🕐 最近</button>
@@ -941,11 +965,13 @@ select option { background: #fff; }
         <div id="quick-list"></div>
       </div>
 
-      <!-- 手動入力 -->
+      <!-- ⑥〜⑩ 入力（タイミング→量→栄養→プレビュー→記録） -->
       <div class="card">
-        <div class="card-title">✏️ 詳細・手動入力</div>
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          <div class="form-group"><label>食品名</label><input type="text" id="f-name" placeholder="例：ご飯（茶碗1杯）"></div>
+        <div class="card-title">✏️ 記録内容</div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="form-group"><label>食品名</label><input type="text" id="f-name" placeholder="選択するか自由に入力" oninput="onNameEdit()"></div>
+
+          <!-- ⑥ 食事タイミング -->
           <div class="form-group">
             <label>食事タイミング</label>
             <div class="chip-row" id="meal-chips">
@@ -955,8 +981,20 @@ select option { background: #fff; }
               <button class="chip" data-meal="間食" onclick="selectMeal('間食')">🍪 間食</button>
             </div>
           </div>
+
+          <!-- ⑦ 量・個数・倍率 -->
           <div class="form-group">
-            <label>数量（人前・倍率）</label>
+            <label>量の指定方法</label>
+            <div class="chip-row" id="qtymode-chips">
+              <button class="chip active" data-mode="serving" onclick="setQtyMode('serving')">人前</button>
+              <button class="chip" data-mode="multiple" onclick="setQtyMode('multiple')">倍率</button>
+              <button class="chip" data-mode="piece" onclick="setQtyMode('piece')">個数</button>
+              <button class="chip" data-mode="gram" onclick="setQtyMode('gram')">グラム</button>
+            </div>
+          </div>
+
+          <!-- 人前 -->
+          <div class="form-group" id="qty-serving-row">
             <div class="chip-row" id="qty-chips">
               <button class="chip" data-qty="0.5" onclick="selectQty(0.5)">0.5人前</button>
               <button class="chip active" data-qty="1" onclick="selectQty(1)">1人前</button>
@@ -965,17 +1003,37 @@ select option { background: #fff; }
               <button class="chip" data-qty="3" onclick="selectQty(3)">3人前</button>
             </div>
           </div>
+          <!-- 倍率 -->
+          <div class="form-group" id="qty-multiple-row" style="display:none;">
+            <input type="number" id="qty-multiple" placeholder="倍率（例：1.5）" step="0.1" min="0.1" value="1" inputmode="decimal" oninput="onQtyNumberInput()">
+          </div>
+          <!-- 個数 -->
+          <div class="form-group" id="qty-piece-row" style="display:none;">
+            <input type="number" id="qty-piece" placeholder="個数（例：2）" step="1" min="1" value="1" inputmode="numeric" oninput="onQtyNumberInput()">
+            <div style="font-size:11px;color:var(--text3);margin-top:4px;">基準1個あたりの栄養に個数を掛けます</div>
+          </div>
+          <!-- グラム -->
+          <div class="form-group" id="qty-gram-row" style="display:none;">
+            <input type="number" id="qty-gram" placeholder="グラム（例：150）" step="10" min="1" inputmode="numeric" oninput="onQtyNumberInput()">
+            <div style="font-size:11px;color:var(--text3);margin-top:4px;">基準量を100gとして換算します</div>
+          </div>
+
+          <!-- ⑧ カロリー・PFC -->
           <div class="form-row">
-            <div class="form-group"><label>カロリー (kcal)</label><input type="number" id="f-cal" placeholder="252" min="0" inputmode="decimal" oninput="updateConfirmCard()"></div>
-            <div class="form-group"><label>タンパク質 (g)</label><input type="number" id="f-protein" placeholder="4" min="0" step="0.1" inputmode="decimal" oninput="updateConfirmCard()"></div>
+            <div class="form-group"><label>カロリー (kcal)</label><input type="number" id="f-cal" placeholder="252" min="0" inputmode="decimal" oninput="onNutritionEdit()"></div>
+            <div class="form-group"><label>タンパク質 (g)</label><input type="number" id="f-protein" placeholder="4" min="0" step="0.1" inputmode="decimal" oninput="onNutritionEdit()"></div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label>脂質 (g)</label><input type="number" id="f-fat" placeholder="0.5" min="0" step="0.1" inputmode="decimal" oninput="updateConfirmCard()"></div>
-            <div class="form-group"><label>炭水化物 (g)</label><input type="number" id="f-carb" placeholder="55" min="0" step="0.1" inputmode="decimal" oninput="updateConfirmCard()"></div>
+            <div class="form-group"><label>脂質 (g)</label><input type="number" id="f-fat" placeholder="0.5" min="0" step="0.1" inputmode="decimal" oninput="onNutritionEdit()"></div>
+            <div class="form-group"><label>炭水化物 (g)</label><input type="number" id="f-carb" placeholder="55" min="0" step="0.1" inputmode="decimal" oninput="onNutritionEdit()"></div>
           </div>
-          <!-- 登録前確認カード -->
+
+          <!-- ⑨ 登録前プレビュー -->
           <div id="confirm-card" class="confirm-card" style="display:none;">
-            <div class="confirm-head">登録内容の確認</div>
+            <div class="confirm-head-row">
+              <span class="confirm-head">登録内容のプレビュー</span>
+              <span class="confirm-ai-badge" id="confirm-ai-badge" style="display:none;">🤖 AI推定・修正可</span>
+            </div>
             <div class="confirm-name" id="confirm-name">–</div>
             <div class="confirm-macros">
               <div class="confirm-macro"><span class="confirm-macro-label">カロリー</span><span class="confirm-macro-val" id="confirm-cal">0<small>kcal</small></span></div>
@@ -984,6 +1042,8 @@ select option { background: #fff; }
               <div class="confirm-macro"><span class="confirm-macro-label">C</span><span class="confirm-macro-val" id="confirm-c" style="color:var(--accent);">0<small>g</small></span></div>
             </div>
           </div>
+
+          <!-- ⑩ 記録ボタン -->
           <button class="btn" onclick="addFood()"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>記録する</button>
         </div>
       </div>
@@ -1919,13 +1979,15 @@ let searchTimer=null;
 let activeCat='all';
 let selectedMeal='夕食';
 let selectedQty=1;
+let qtyMode='serving';  // serving|multiple|piece|gram
+let isAIEstimate=false; // AI推定で入力されたか
 let baseNutrition=null; // 倍率計算の基準
 
 function onFoodSearch(e){
   const q=e.target.value.trim();
   clearTimeout(searchTimer);
   if(!q){ document.getElementById('search-results').innerHTML=''; return; }
-  searchTimer=setTimeout(()=>renderFoodSearchResults(searchFoods(q)),120);
+  searchTimer=setTimeout(()=>renderFoodSearchResults(searchFoods(q), q),120);
 }
 
 function catIcon(cat){
@@ -2027,27 +2089,247 @@ function searchFoods(query){
   return scored.slice(0,12).map(x=>x.food);
 }
 
-/* --- 結果描画 --- */
-function renderFoodSearchResults(results){
+/* ============================================================
+   AI栄養推定エンジン（ルールベース・将来API差し替え可能）
+   登録DBに無い自炊・変則メニューを推定
+   ============================================================ */
+
+/* 食材・調理法の栄養プロファイル（100gあたり目安、または1単位あたり） */
+const NUTRITION_RULES = {
+  // ベース食材（含まれると主成分として推定）
+  bases: [
+    { keys:['おから','okara'],          cal:90,  p:6,  f:3.5, c:9,  tag:'低カロリー高食物繊維' },
+    { keys:['豆腐','とうふ','tofu'], cal:110, p:10, f:6,  c:4,  tag:'高タンパク低脂質' },
+    { keys:['鶏むね','鶏胸','とりむね','torimune','むね肉','chicken breast','chickenbreast'], cal:120, p:24, f:2, c:1, tag:'高タンパク低脂質' },
+    { keys:['ささみ','sasami'],          cal:105, p:23, f:1,  c:0,  tag:'高タンパク低脂質' },
+    { keys:['鶏もも','とりもも','torimomo'],cal:200, p:18, f:14, c:0,  tag:'タンパク質豊富' },
+    { keys:['大豆ミート','ソイミート','soy meat','soymeat'], cal:130, p:18, f:4, c:8, tag:'植物性高タンパク' },
+    { keys:['さば','サバ','鯖','saba'], cal:200, p:20, f:13, c:0, tag:'良質な脂質' },
+    { keys:['鮭','さけ','しゃけ','salmon'], cal:180, p:20, f:10, c:0, tag:'高タンパク' },
+    { keys:['ツナ','つな','tuna'], cal:80, p:16, f:1, c:0, tag:'高タンパク' },
+    { keys:['卵','たまご','egg'], cal:150, p:12, f:10, c:1, tag:'完全栄養' },
+    { keys:['納豆','natto'],            cal:190, p:16, f:10, c:12, tag:'発酵高タンパク' },
+    { keys:['オートミール','オーツ','oatmeal','oats'], cal:350, p:13, f:6, c:60, tag:'低GI炭水化物' },
+    { keys:['玄米','genmai'],            cal:165, p:3, f:1, c:35, tag:'低GI主食' },
+    { keys:['こんにゃく','蒟蒻','konjac','konnyaku'], cal:8, p:0.2, f:0, c:3, tag:'超低カロリー' },
+    { keys:['キャベツ','野菜','salad','サラダ','yasai'], cal:30, p:2, f:0.3, c:6, tag:'低カロリー' },
+    { keys:['プロテイン','protein'], cal:120, p:24, f:2, c:5, tag:'高タンパク' },
+  ],
+  // 料理タイプ（ベースが無い場合の主成分推定）
+  dishes: [
+    { keys:['ハンバーグ','hamburg','hamburger','はんばーぐ'], cal:300, p:18, f:20, c:12, base:'1個', icon:'🍔' },
+    { keys:['パンケーキ','ホットケーキ','pancake'], cal:260, p:6, f:9, c:38, base:'1枚', icon:'🥞' },
+    { keys:['蒸しパン','蒸し','むしぱん','mushipan'], cal:180, p:5, f:4, c:30, base:'1個', icon:'🍞' },
+    { keys:['パン','ぱん','bread','カレーパン'], cal:200, p:6, f:6, c:30, base:'1個', icon:'🍞' },
+    { keys:['カレー','curry'],      cal:600, p:15, f:20, c:85, base:'1皿', icon:'🍛' },
+    { keys:['ラーメン','らーめん','ramen'], cal:450, p:17, f:14, c:65, base:'1杯', icon:'🍜' },
+    { keys:['チャーハン','炒飯','焼き飯','chahan'], cal:560, p:12, f:18, c:85, base:'1皿', icon:'🍚' },
+    { keys:['親子丼','丼','どんぶり','丼ぶり','don'], cal:600, p:25, f:15, c:88, base:'1杯', icon:'🍚' },
+    { keys:['味噌汁','みそ汁','スープ','soup','misoshiru'], cal:60, p:4, f:2, c:7, base:'1杯', icon:'🍲' },
+    { keys:['サラダ','salad'],      cal:120, p:5, f:7, c:10, base:'1皿', icon:'🥗' },
+    { keys:['弁当','べんとう','bento'], cal:650, p:22, f:22, c:90, base:'1個', icon:'🍱' },
+    { keys:['パスタ','スパゲ','pasta','spaghetti'], cal:480, p:15, f:14, c:72, base:'1皿', icon:'🍝' },
+    { keys:['うどん','そば','麺','noodle','udon'], cal:320, p:11, f:3, c:62, base:'1杯', icon:'🍜' },
+    { keys:['炒め','いため','stir'], cal:280, p:15, f:18, c:14, base:'1皿', icon:'🍳' },
+    { keys:['焼き','グリル','grill'], cal:250, p:22, f:16, c:3, base:'1人前', icon:'🍳' },
+    { keys:['揚げ','フライ','から揚げ','唐揚げ','fry','fried'], cal:350, p:18, f:22, c:18, base:'1人前', icon:'🍤' },
+    { keys:['ケーキ','cake','スイーツ'], cal:340, p:5, f:18, c:40, base:'1個', icon:'🍰' },
+    { keys:['ステーキ','steak'],    cal:380, p:33, f:26, c:1, base:'1枚', icon:'🥩' },
+  ],
+  // 修飾語（補正）
+  modifiers: [
+    { keys:['定食','セット','set'], type:'add', cal:290, p:6, f:4, c:60, label:'ご飯・味噌汁込み' }, // 定食化
+    { keys:['丼','どん'],          type:'add', cal:250, p:4, f:1, c:55, label:'ご飯込み' },
+    { keys:['低糖質','糖質オフ','糖質制限','ロカボ','low carb','lowcarb'], type:'carb', factor:0.35, label:'糖質カット' },
+    { keys:['高タンパク','プロテイン','high protein'], type:'protein', factor:1.4, label:'タンパク質増' },
+    { keys:['大盛','大盛り','特盛','oomori','large'], type:'mult', factor:1.4, label:'大盛り' },
+    { keys:['少なめ','小盛','小盛り','ハーフ','half','少な'], type:'mult', factor:0.7, label:'少なめ' },
+    { keys:['ヘルシー','あっさり','野菜多め'], type:'cal', factor:0.8, label:'ヘルシー' },
+    { keys:['こってり','大盛り肉','肉増し'], type:'cal', factor:1.25, label:'ボリューム' },
+  ]
+};
+
+/* カテゴリ推定 */
+function inferFoodCategory(query){
+  const nq=normalizeSearchText(query);
+  for(const d of NUTRITION_RULES.dishes){
+    if(d.keys.some(k=>nq.includes(normalizeSearchText(k)))){
+      if(d.icon==='🍔'||d.icon==='🥩'||d.icon==='🍳') return '肉料理';
+      if(d.icon==='🍚'||d.icon==='🍛') return 'ご飯もの';
+      if(d.icon==='🍜'||d.icon==='🍝') return '麺類';
+      if(d.icon==='🍞'||d.icon==='🥞'||d.icon==='🍰') return 'パン・菓子';
+      if(d.icon==='🥗'||d.icon==='🍲') return '野菜・汁物';
+      return '料理';
+    }
+  }
+  return '自炊メニュー';
+}
+
+/* 含まれる食材を推定 */
+function inferIngredients(query){
+  const nq=normalizeSearchText(query);
+  const found=[];
+  for(const b of NUTRITION_RULES.bases){
+    if(b.keys.some(k=>nq.includes(normalizeSearchText(k)))) found.push(b);
+  }
+  return found;
+}
+
+/* 単一の栄養推定（基準1単位ぶん） */
+function estimateFoodNutrition(query){
+  const nq=normalizeSearchText(query);
+  let cal=0,p=0,f=0,c=0,icon='🍽️',baseUnit='1人前',tags=[];
+
+  // 1. 料理タイプを特定（ベース栄養）
+  let dish=NUTRITION_RULES.dishes.find(d=>d.keys.some(k=>nq.includes(normalizeSearchText(k))));
+  // 2. 含まれる食材
+  const ingredients=inferIngredients(query);
+
+  if(dish){
+    cal=dish.cal; p=dish.p; f=dish.f; c=dish.c; icon=dish.icon; baseUnit=dish.base;
+    // 食材で補正（例：豆腐ハンバーグ → 通常ハンバーグより低脂質高タンパク寄りに）
+    if(ingredients.length){
+      const ing=ingredients[0];
+      // 食材の特性を30%ブレンド
+      cal=Math.round(cal*0.7 + ing.cal*1.5*0.3);
+      p=round1(p*0.7 + ing.p*1.5*0.3);
+      f=round1(f*0.7 + ing.f*1.5*0.3);
+      c=round1(c*0.7 + ing.c*1.5*0.3);
+      if(ing.tag) tags.push(ing.tag);
+    }
+  } else if(ingredients.length){
+    // 料理タイプ不明だが食材あり → 食材ベースで1人前(150g)推定
+    const ing=ingredients[0];
+    cal=Math.round(ing.cal*1.5); p=round1(ing.p*1.5); f=round1(ing.f*1.5); c=round1(ing.c*1.5);
+    if(ing.tag) tags.push(ing.tag);
+    baseUnit='1人前';
+  } else {
+    // 何も特定できない → 一般的な1食として推定
+    cal=400; p=15; f=15; c=50; baseUnit='1人前';
+  }
+
+  // 3. 修飾語で補正
+  const mods=[];
+  for(const mod of NUTRITION_RULES.modifiers){
+    if(mod.keys.some(k=>nq.includes(normalizeSearchText(k)))){
+      mods.push(mod.label);
+      if(mod.type==='mult'){ cal=Math.round(cal*mod.factor); p=round1(p*mod.factor); f=round1(f*mod.factor); c=round1(c*mod.factor); }
+      else if(mod.type==='cal'){ cal=Math.round(cal*mod.factor); }
+      else if(mod.type==='carb'){ const before=c; c=round1(c*mod.factor); cal=Math.round(cal-(before-c)*4); }
+      else if(mod.type==='protein'){ const before=p; p=round1(p*mod.factor); cal=Math.round(cal+(p-before)*4); }
+      else if(mod.type==='add'){ cal+=mod.cal; p=round1(p+mod.p); f=round1(f+mod.f); c=round1(c+mod.c); }
+    }
+  }
+  tags.push(...mods);
+
+  return { cal:Math.max(10,cal), p:Math.max(0,p), f:Math.max(0,f), c:Math.max(0,c), icon, baseUnit, tags, category:inferFoodCategory(query) };
+}
+
+/* 複数候補を生成（1個/2個/定食/小さめ等） */
+function generateEstimatedFoodCandidates(query){
+  const q=query.trim();
+  if(!q || q.length<2) return [];
+  const base=estimateFoodNutrition(q);
+  const nq=normalizeSearchText(q);
+  const candidates=[];
+  const unit=base.baseUnit;
+
+  // 候補1：基準1単位
+  candidates.push({
+    name:`${q}（${unit}）`, cal:base.cal, p:base.p, f:base.f, c:base.c,
+    icon:base.icon, ai:true, note:base.tags.slice(0,2).join('・')
+  });
+
+  // 候補2：定食（まだ定食でなければ）
+  if(!nq.includes('ていしょく') && !nq.includes('丼') && base.category!=='野菜・汁物'){
+    const setMod=NUTRITION_RULES.modifiers[0]; // 定食
+    candidates.push({
+      name:`${q}定食`, cal:base.cal+setMod.cal, p:round1(base.p+setMod.p), f:round1(base.f+setMod.f), c:round1(base.c+setMod.c),
+      icon:'🍱', ai:true, note:'ご飯・味噌汁込み'
+    });
+  }
+
+  // 候補3：2倍 or 小さめ
+  if(unit.includes('個')||unit.includes('枚')){
+    candidates.push({
+      name:`${q}（2${unit.replace(/^1/,'')}）`, cal:base.cal*2, p:round1(base.p*2), f:round1(base.f*2), c:round1(base.c*2),
+      icon:base.icon, ai:true, note:'2倍量'
+    });
+  } else {
+    candidates.push({
+      name:`${q}（小さめ）`, cal:Math.round(base.cal*0.7), p:round1(base.p*0.7), f:round1(base.f*0.7), c:round1(base.c*0.7),
+      icon:base.icon, ai:true, note:'0.7倍'
+    });
+  }
+
+  return candidates;
+}
+
+/* 推定候補を選択 → 入力欄へ */
+function applyEstimatedFood(name, cal, p, f, c){
+  baseNutrition={ name:decodeURIComponent(name), cal, p, f, c };
+  selectedQty=1; syncQtyChips(); applyNutritionToForm();
+  document.getElementById('f-search').value='';
+  document.getElementById('search-results').innerHTML='';
+  // AI推定フラグを立てる（プレビュー表示用）
+  isAIEstimate=true;
+  updateConfirmCard();
+  showToast(`🤖 AI推定「${decodeURIComponent(name)}」を反映`);
+  document.getElementById('f-name').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+/* --- 結果描画（DB候補 + AI推定候補） --- */
+function renderFoodSearchResults(results, query){
   const el=document.getElementById('search-results');
-  if(!results.length){ el.innerHTML='<div class="no-result">該当なし。手動入力もできます</div>'; return; }
-  el.innerHTML=results.map(f=>{
-    const idx=FOOD_DB.indexOf(f);
-    const brandTag=f.brand?`<span style="font-size:10px;color:var(--text3);">${f.brand}</span> `:'';
-    return `<div class="result-item" onclick="pickFood(${idx})">
-      <div class="result-left">
-        <span class="result-cat-icon">${catIcon(f.cat)}</span>
-        <div style="min-width:0;">
-          <div class="result-name">${f.n}</div>
-          <div class="result-meta">P${f.p} F${f.f} C${f.c}</div>
+  const q=(query||'').trim();
+  let html='';
+
+  // 【登録済み食品】グループ
+  if(results.length){
+    html+=`<div class="result-group-head">📋 登録済み食品</div>`;
+    html+=results.map(f=>{
+      const idx=FOOD_DB.indexOf(f);
+      return `<div class="result-item" onclick="pickFood(${idx})">
+        <div class="result-left">
+          <span class="result-cat-icon">${catIcon(f.cat)}</span>
+          <div style="min-width:0;">
+            <div class="result-name">${f.n}</div>
+            <div class="result-meta">P${f.p} F${f.f} C${f.c}</div>
+          </div>
         </div>
-      </div>
-      <span class="result-cal">${f.cal}kcal</span>
-    </div>`;
-  }).join('');
+        <span class="result-cal">${f.cal}<small>kcal</small></span>
+      </div>`;
+    }).join('');
+  }
+
+  // 【AI推定】グループ（DB完全一致が少ない・無い場合に生成）
+  const exactMatch=results.some(f=>normalizeSearchText(f.n)===normalizeSearchText(q));
+  if(q.length>=2 && !exactMatch){
+    const aiCandidates=generateEstimatedFoodCandidates(q);
+    if(aiCandidates.length){
+      html+=`<div class="result-group-head">🤖 AI推定 <span class="ai-tag">概算</span></div>`;
+      html+=aiCandidates.map(c=>{
+        const enc=encodeURIComponent(c.name);
+        return `<div class="result-item ai-item" onclick="applyEstimatedFood('${enc}',${c.cal},${c.p},${c.f},${c.c})">
+          <div class="result-left">
+            <span class="result-cat-icon">${c.icon}</span>
+            <div style="min-width:0;">
+              <div class="result-name">${c.name}</div>
+              <div class="result-meta">P${c.p} F${c.f} C${c.c}${c.note?' ・'+c.note:''}</div>
+            </div>
+          </div>
+          <span class="result-cal">約${c.cal}<small>kcal</small></span>
+        </div>`;
+      }).join('');
+      html+=`<div class="ai-disclaimer">🤖 AI推定は概算です。選択後に数値を修正できます</div>`;
+    }
+  }
+
+  if(!html){ html='<div class="no-result">候補が見つかりません<br><small>手動入力でも記録できます</small></div>'; }
+  el.innerHTML=html;
 }
 // 後方互換エイリアス
-function renderSearchResults(q){ renderFoodSearchResults(searchFoods(q)); }
+function renderSearchResults(q){ renderFoodSearchResults(searchFoods(q), q); }
 
 function renderCatScroll(){
   // 主要カテゴリを抽出（複合カテゴリは先頭で集約）
@@ -2060,13 +2342,14 @@ function renderCatScroll(){
 function setCat(c){
   activeCat=c; renderCatScroll();
   const q=document.getElementById('f-search').value.trim();
-  if(q) renderFoodSearchResults(searchFoods(q));
+  if(q) renderFoodSearchResults(searchFoods(q), q);
 }
 
 function pickFood(idx){
   const f=FOOD_DB[idx];
   baseNutrition={ name:f.n, cal:f.cal, p:f.p, f:f.f, c:f.c };
   selectedQty=1;
+  isAIEstimate=false;  // DB食品なのでAI推定フラグを解除
   syncQtyChips();
   applyNutritionToForm();
   document.getElementById('f-search').value='';
@@ -2265,15 +2548,51 @@ function resetPhoto(){
 
 function applyNutritionToForm(){
   if(!baseNutrition) return;
+  const factor=currentQtyFactor();
   document.getElementById('f-name').value=baseNutrition.name;
-  document.getElementById('f-cal').value=Math.round(baseNutrition.cal*selectedQty);
-  document.getElementById('f-protein').value=round1(baseNutrition.p*selectedQty);
-  document.getElementById('f-fat').value=round1(baseNutrition.f*selectedQty);
-  document.getElementById('f-carb').value=round1(baseNutrition.c*selectedQty);
+  document.getElementById('f-cal').value=Math.round(baseNutrition.cal*factor);
+  document.getElementById('f-protein').value=round1(baseNutrition.p*factor);
+  document.getElementById('f-fat').value=round1(baseNutrition.f*factor);
+  document.getElementById('f-carb').value=round1(baseNutrition.c*factor);
   updateConfirmCard();
 }
 
-/* 登録前確認カードのリアルタイム更新 */
+/* 現在の量モードに応じた倍率を計算 */
+function currentQtyFactor(){
+  if(qtyMode==='serving' || qtyMode==='multiple') return selectedQty;
+  if(qtyMode==='piece'){ const n=parseFloat(document.getElementById('qty-piece').value)||1; return n; }
+  if(qtyMode==='gram'){ const g=parseFloat(document.getElementById('qty-gram').value)||100; return g/100; }
+  return 1;
+}
+
+/* 量モード切替（人前・倍率・個数・グラム） */
+function setQtyMode(mode){
+  qtyMode=mode;
+  document.querySelectorAll('#qtymode-chips .chip').forEach(c=>c.classList.toggle('active',c.dataset.mode===mode));
+  ['serving','multiple','piece','gram'].forEach(m=>{
+    const row=document.getElementById('qty-'+m+'-row');
+    if(row) row.style.display=(m===mode)?'':'none';
+  });
+  // モード切替時に基準を確保
+  ensureBaseNutrition();
+  applyNutritionToForm();
+}
+
+/* 数値入力（倍率・個数・グラム）変更時 */
+function onQtyNumberInput(){
+  ensureBaseNutrition();
+  applyNutritionToForm();
+}
+
+/* 基準栄養が無ければ現在の入力値から作る */
+function ensureBaseNutrition(){
+  if(!baseNutrition){
+    const cal=parseFloat(document.getElementById('f-cal').value)||0;
+    if(cal>0) baseNutrition={ name:document.getElementById('f-name').value, cal, p:parseFloat(document.getElementById('f-protein').value)||0, f:parseFloat(document.getElementById('f-fat').value)||0, c:parseFloat(document.getElementById('f-carb').value)||0 };
+  }
+}
+
+/* 登録前プレビューのリアルタイム更新 */
 function updateConfirmCard(){
   const name=document.getElementById('f-name').value.trim();
   const cal=parseFloat(document.getElementById('f-cal').value)||0;
@@ -2284,11 +2603,19 @@ function updateConfirmCard(){
   if(!card) return;
   if(name && cal>0){
     card.style.display='block';
-    document.getElementById('confirm-name').textContent=`${selectedMeal}：${name}`;
+    // 量の表示
+    let qtyLabel='';
+    if(qtyMode==='serving') qtyLabel=`${selectedQty}人前`;
+    else if(qtyMode==='multiple') qtyLabel=`×${document.getElementById('qty-multiple').value||1}`;
+    else if(qtyMode==='piece') qtyLabel=`${document.getElementById('qty-piece').value||1}個`;
+    else if(qtyMode==='gram') qtyLabel=`${document.getElementById('qty-gram').value||0}g`;
+    document.getElementById('confirm-name').textContent=`${selectedMeal}・${qtyLabel}：${name}`;
     document.getElementById('confirm-cal').innerHTML=`${cal}<small>kcal</small>`;
     document.getElementById('confirm-p').innerHTML=`${p}<small>g</small>`;
     document.getElementById('confirm-f').innerHTML=`${f}<small>g</small>`;
     document.getElementById('confirm-c').innerHTML=`${c}<small>g</small>`;
+    // AI推定バッジ
+    document.getElementById('confirm-ai-badge').style.display=isAIEstimate?'':'none';
   } else {
     card.style.display='none';
   }
@@ -2302,16 +2629,17 @@ function selectMeal(meal){
 function selectQty(q){
   selectedQty=q;
   syncQtyChips();
-  // 基準があれば倍率反映、なければ現在値を基準化
-  if(!baseNutrition){
-    const cal=parseFloat(document.getElementById('f-cal').value)||0;
-    if(cal>0) baseNutrition={ name:document.getElementById('f-name').value, cal, p:parseFloat(document.getElementById('f-protein').value)||0, f:parseFloat(document.getElementById('f-fat').value)||0, c:parseFloat(document.getElementById('f-carb').value)||0 };
-  }
+  ensureBaseNutrition();
   applyNutritionToForm();
 }
 function syncQtyChips(){
   document.querySelectorAll('#qty-chips .chip').forEach(c=>c.classList.toggle('active',parseFloat(c.dataset.qty)===selectedQty));
 }
+
+/* 食品名を手で編集したら、AI推定フラグは維持しつつプレビュー更新 */
+function onNameEdit(){ updateConfirmCard(); }
+/* 栄養を手で編集したら、AI推定フラグを解除（自分で確定した値とみなす） */
+function onNutritionEdit(){ updateConfirmCard(); }
 
 function addFood(){
   const name=document.getElementById('f-name').value.trim();
@@ -2324,7 +2652,12 @@ function addFood(){
   addXP(10);
   saveState();
   ['f-name','f-cal','f-protein','f-fat','f-carb'].forEach(id=>document.getElementById(id).value='');
-  baseNutrition=null; selectedQty=1; syncQtyChips();
+  baseNutrition=null; selectedQty=1; isAIEstimate=false;
+  // 量入力をリセット
+  setQtyMode('serving'); syncQtyChips();
+  const mEl=document.getElementById('qty-multiple'); if(mEl) mEl.value='1';
+  const pEl=document.getElementById('qty-piece'); if(pEl) pEl.value='1';
+  const gEl=document.getElementById('qty-gram'); if(gEl) gEl.value='';
   const cc=document.getElementById('confirm-card'); if(cc) cc.style.display='none';
   showToast(`✅ ${name} を記録しました`);
   checkBadges();
@@ -2430,7 +2763,7 @@ function quickAdd(nameEnc,cal,p,f,c){
 }
 function fillFromQuick(nameEnc,cal,p,f,c){
   baseNutrition={ name:decodeURIComponent(nameEnc), cal, p, f, c };
-  selectedQty=1; syncQtyChips(); applyNutritionToForm();
+  selectedQty=1; isAIEstimate=false; syncQtyChips(); applyNutritionToForm();
   document.getElementById('f-name').scrollIntoView({behavior:'smooth',block:'center'});
   showToast('入力欄に反映しました');
 }
