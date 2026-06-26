@@ -1504,7 +1504,7 @@ const FOOD_DB = [
   {n:"冷やし中華",cal:480,p:18,f:14,c:70,cat:"麺類",brand:"",kw:"hiyashi chuka ひやしちゅうか"},
   {n:"そうめん（2束）",cal:250,p:8,f:1,c:52,cat:"麺類",brand:"",kw:"somen そうめん"},
   {n:"こんにゃく麺",cal:10,p:0.3,f:0,c:3,cat:"麺類・ダイエット",brand:"",kw:"konjac konnyaku こんにゃくめん ロカボ"},
-  {n:"鶏胸肉（100g・皮なし焼き）",cal:165,p:26,f:5,c:0,cat:"肉",brand:"",kw:"chicken breast とりむね むね さらだちきん"},
+  {n:"鶏胸肉（100g・皮なし焼き）",cal:165,p:26,f:5,c:0,cat:"肉",brand:"",kw:"chicken breast torimune とりむね むね さらだちきん 鶏むね"},
   {n:"鶏もも肉（100g・焼き）",cal:200,p:18,f:14,c:0,cat:"肉",brand:"",kw:"chicken thigh とりもも もも"},
   {n:"ささみ（2本）",cal:90,p:20,f:0.8,c:0,cat:"肉",brand:"",kw:"sasami ささみ"},
   {n:"豚ロース（100g・焼き）",cal:263,p:19,f:19,c:0,cat:"肉",brand:"",kw:"pork ぶた ぶたにく ロース"},
@@ -1639,6 +1639,56 @@ const FOOD_DB = [
   {n:"プロテインバー（SAVAS）",cal:200,p:15,f:8,c:20,cat:"プロテイン",brand:"SAVAS",kw:"savas protein bar ざばす ぷろていんばー"},
   {n:"オートミール（40g）",cal:150,p:5,f:3,c:24,cat:"プロテイン・ダイエット",brand:"",kw:"oatmeal おーとみーる オーツ"},
   {n:"ゆで卵白（3個分）",cal:51,p:11,f:0,c:0.6,cat:"プロテイン",brand:"",kw:"egg white らんぱく しろみ"},
+  {n:"味噌汁（1杯）",cal:40,p:3,f:1,c:5,cat:"和食",brand:"",kw:"miso soup みそしる みそ汁 おみそしる スープ"},
+  {n:"豚汁（1杯）",cal:130,p:7,f:6,c:12,cat:"和食",brand:"",kw:"tonjiru ぶたじる とんじる"},
+  {n:"お吸い物（1杯）",cal:20,p:1.5,f:0.3,c:2,cat:"和食",brand:"",kw:"suimono おすいもの すいもの"},
+  {n:"寿司（1人前・10貫）",cal:480,p:30,f:6,c:75,cat:"和食",brand:"",kw:"sushi すし おすし にぎり 握り"},
+  {n:"巻き寿司（1本）",cal:200,p:6,f:2,c:40,cat:"和食",brand:"",kw:"makizushi まきずし のりまき 海苔巻き"},
+  {n:"いなり寿司（2個）",cal:180,p:4,f:3,c:35,cat:"和食",brand:"",kw:"inari いなり いなりずし"},
+  {n:"ピザ（1切れ）",cal:280,p:12,f:12,c:32,cat:"洋食",brand:"",kw:"pizza ぴざ"},
+  {n:"ピザ（Mサイズ半分）",cal:840,p:36,f:36,c:96,cat:"洋食",brand:"",kw:"pizza ぴざ"},
+  {n:"キムチ（50g）",cal:23,p:1.3,f:0.3,c:4,cat:"野菜",brand:"",kw:"kimchi きむち キムチ"},
+  {n:"餃子（5個）",cal:240,p:9,f:12,c:24,cat:"中華",brand:"",kw:"gyoza ぎょうざ ギョーザ"},
+  {n:"焼肉（カルビ・100g）",cal:380,p:14,f:33,c:1,cat:"肉",brand:"",kw:"yakiniku やきにく 焼き肉 カルビ"},
+  {n:"焼肉定食",cal:750,p:30,f:38,c:75,cat:"肉",brand:"",kw:"yakiniku やきにく 焼き肉定食"},
+  {n:"鶏肉（もも・100g）",cal:200,p:18,f:14,c:0,cat:"肉",brand:"",kw:"chicken とりにく 鶏 とり チキン"},
+  {n:"牛肉（赤身・100g）",cal:196,p:21,f:11,c:0,cat:"肉",brand:"",kw:"beef ぎゅうにく 牛 ビーフ"},
+  {n:"豚肉（こま・100g）",cal:240,p:18,f:18,c:0,cat:"肉",brand:"",kw:"pork ぶたにく 豚 ポーク こま切れ"},
+  {n:"春巻き（2本）",cal:180,p:5,f:10,c:18,cat:"中華",brand:"",kw:"harumaki はるまき"},
+  {n:"麻婆豆腐",cal:280,p:16,f:18,c:12,cat:"中華",brand:"",kw:"mabo まーぼー 麻婆 マーボー"},
+  {n:"酢豚",cal:380,p:16,f:18,c:38,cat:"中華",brand:"",kw:"subuta すぶた"},
+  {n:"エビチリ",cal:230,p:18,f:12,c:14,cat:"中華",brand:"",kw:"ebichili えびちり 海老チリ"},
+  {n:"天津飯",cal:560,p:18,f:20,c:75,cat:"中華",brand:"",kw:"tenshinhan てんしんはん"},
+  {n:"中華丼",cal:560,p:18,f:16,c:82,cat:"中華",brand:"",kw:"chukadon ちゅうかどん"},
+  {n:"カツ丼",cal:870,p:30,f:30,c:115,cat:"和食",brand:"",kw:"katsudon かつどん カツ丼"},
+  {n:"天丼",cal:680,p:18,f:18,c:105,cat:"和食",brand:"",kw:"tendon てんどん 天丼"},
+  {n:"うな丼",cal:670,p:26,f:22,c:88,cat:"和食",brand:"",kw:"unadon うなどん うな丼 うなぎ"},
+  {n:"おでん（盛り合わせ）",cal:200,p:14,f:6,c:22,cat:"和食",brand:"",kw:"oden おでん"},
+  {n:"肉じゃが",cal:280,p:12,f:10,c:35,cat:"和食",brand:"",kw:"nikujaga にくじゃが"},
+  {n:"きつねうどん",cal:380,p:13,f:8,c:65,cat:"麺類",brand:"",kw:"kitsune きつねうどん"},
+  {n:"天ぷらうどん",cal:480,p:16,f:14,c:70,cat:"麺類",brand:"",kw:"tempura てんぷらうどん"},
+  {n:"カレーうどん",cal:480,p:15,f:14,c:72,cat:"麺類",brand:"",kw:"curry udon かれーうどん"},
+  {n:"カップラーメン",cal:350,p:10,f:14,c:48,cat:"麺類",brand:"",kw:"cup noodle かっぷらーめん カップ麺"},
+  {n:"フライドポテト（M）",cal:410,p:5,f:21,c:51,cat:"洋食",brand:"",kw:"french fries ふらいどぽてと ポテト フライ"},
+  {n:"チーズバーガー",cal:310,p:16,f:14,c:30,cat:"洋食",brand:"",kw:"cheeseburger ちーずばーがー"},
+  {n:"オムレツ",cal:220,p:14,f:17,c:2,cat:"洋食",brand:"",kw:"omelet おむれつ"},
+  {n:"フライドチキン（1個）",cal:240,p:18,f:15,c:8,cat:"洋食",brand:"",kw:"fried chicken ふらいどちきん"},
+  {n:"カルパッチョ",cal:180,p:16,f:11,c:3,cat:"洋食",brand:"",kw:"carpaccio かるぱっちょ"},
+  {n:"焼き鳥（タレ・3本）",cal:210,p:18,f:12,c:8,cat:"肉",brand:"",kw:"yakitori やきとり 焼鳥"},
+  {n:"焼き鳥（塩・3本）",cal:180,p:19,f:10,c:1,cat:"肉",brand:"",kw:"yakitori やきとり 焼鳥 しお"},
+  {n:"刺身盛り合わせ",cal:200,p:32,f:6,c:3,cat:"魚介",brand:"",kw:"sashimi さしみ 刺し身 おさしみ"},
+  {n:"イカ（100g）",cal:80,p:18,f:1,c:0.2,cat:"魚介",brand:"",kw:"squid いか イカ"},
+  {n:"タコ（100g）",cal:76,p:16,f:0.7,c:0.1,cat:"魚介",brand:"",kw:"octopus たこ タコ"},
+  {n:"ホタテ（3個）",cal:70,p:13,f:0.3,c:4,cat:"魚介",brand:"",kw:"scallop ほたて ホタテ"},
+  {n:"あさりの味噌汁",cal:50,p:4,f:1,c:5,cat:"和食",brand:"",kw:"asari あさり みそしる"},
+  {n:"野菜炒め",cal:160,p:6,f:10,c:12,cat:"野菜",brand:"",kw:"yasaiitame やさいいため 野菜いため"},
+  {n:"冷やし中華",cal:480,p:18,f:14,c:70,cat:"麺類",brand:"",kw:"hiyashi chuka ひやしちゅうか"},
+  {n:"ナポリタン",cal:480,p:14,f:15,c:72,cat:"麺類",brand:"",kw:"napolitan なぽりたん"},
+  {n:"グラタン",cal:430,p:16,f:24,c:38,cat:"洋食",brand:"",kw:"gratin ぐらたん"},
+  {n:"ドリア",cal:480,p:15,f:22,c:55,cat:"洋食",brand:"",kw:"doria どりあ"},
+  {n:"おにぎり（ツナマヨ）",cal:234,p:5,f:7,c:37,cat:"主食",brand:"",kw:"onigiri tuna つなまよ おむすび"},
+  {n:"サラダうどん",cal:350,p:12,f:6,c:62,cat:"麺類",brand:"",kw:"salad udon さらだうどん"},
+  {n:"プロテインヨーグルト",cal:100,p:11,f:0,c:14,cat:"乳製品・プロテイン",brand:"",kw:"protein yogurt ぷろていんよーぐると"},
 ];
 
 
@@ -2011,8 +2061,23 @@ function normalizeSearchText(text){
   t=t.normalize('NFKC');          // 全角英数→半角、合成文字正規化
   t=KANA_MAP(t);                  // カタカナ→ひらがな
   t=t.replace(/[\s　]+/g,'');      // 空白除去
-  t=t.replace(/[っー、。・（）()]/g,''); // 揺れやすい記号除去
+  t=t.replace(/[っー、。・（）(),.\-_]/g,''); // 揺れやすい記号除去
   return t;
+}
+
+/* クエリを意味のあるトークンに分解（部分マッチ用） */
+function tokenizeQuery(nq){
+  const tokens=new Set();
+  if(nq) tokens.add(nq);
+  // よくある接尾語を分離して語幹も検索対象に（鶏肉→鶏、牛肉→牛 など）
+  const suffixes=['肉','料理','定食','弁当','丼','焼き','焼','煮','炒め','揚げ','蒸し'];
+  for(const suf of suffixes){
+    if(nq.length>suf.length && nq.endsWith(suf)){
+      tokens.add(nq.slice(0,nq.length-suf.length));
+    }
+  }
+  // 2文字以上なら、連続する2-gramも候補に（語順違い・複合語対策）
+  return [...tokens].filter(t=>t.length>=1);
 }
 
 /* --- 食品の検索対象テキスト（キャッシュ） --- */
@@ -2022,16 +2087,18 @@ function buildFoodIndex(){
     idx,
     name:f.n,
     nName:normalizeSearchText(f.n),
-    nKw:normalizeSearchText(f.kw||''),
+    nKw:(f.kw||'').split(/\s+/).map(k=>normalizeSearchText(k)).filter(Boolean),
     nBrand:normalizeSearchText(f.brand||''),
+    nCat:normalizeSearchText(f.cat||''),
     cat:f.cat,
+    nameLen:f.n.length,
   }));
 }
 
 /* --- 使用頻度マップ（よく食べる/最近を上位化） --- */
 function getUsageBoost(){
   const boost={};
-  state.foods.forEach((f,i)=>{
+  state.foods.forEach((f)=>{
     boost[f.name]=(boost[f.name]||0)+1;              // 頻度
   });
   // 最近のものに追加ボーナス
@@ -2039,37 +2106,64 @@ function getUsageBoost(){
   return boost;
 }
 
-/* --- スコア計算 --- */
-function getFoodSearchScore(item, nq, usage){
+/* --- スコア計算（トークンベースで部分一致を強化） --- */
+function getFoodSearchScore(item, nq, tokens, usage){
   let score=0;
-  const {nName,nKw,nBrand,name}=item;
+  const {nName,nKw,nBrand,nCat,name}=item;
+
+  // 1. 食品名との一致（最重要）
   if(nName===nq) score+=1000;                         // 完全一致
-  else if(nName.startsWith(nq)) score+=500;           // 前方一致
-  else if(nName.includes(nq)) score+=300;             // 部分一致
-  // キーワード（ローマ字・別名・略称）
-  if(nKw){
-    const kws=nKw.split(' ').filter(Boolean);
-    // ↑normalizeで空白除去済みなので、元のkwを別途分割
+  else if(nName.startsWith(nq)) score+=600;           // 前方一致
+  else if(nName.includes(nq)) score+=400;             // 部分一致（クエリ⊂名前）
+  else if(nq.includes(nName) && nName.length>=2) score+=250; // 逆部分一致（名前⊂クエリ）
+
+  // 2. トークン（語幹）一致：鶏肉→鶏、味噌汁→味噌 など
+  if(score===0){
+    for(const tk of tokens){
+      if(tk.length<1) continue;
+      if(nName.includes(tk)){
+        score+=Math.min(300, 120 + tk.length*40);  // 長いトークンほど高得点
+        break;
+      }
+    }
   }
-  // キーワードは元データを空白分割して個別判定
-  const rawKw=(FOOD_DB[item.idx].kw||'');
-  for(const k of rawKw.split(/\s+/)){
-    if(!k) continue;
-    const nk=normalizeSearchText(k);
+
+  // 3. キーワード（ローマ字・別名・略称）一致
+  for(const nk of nKw){
     if(!nk) continue;
-    if(nk===nq) score+=400;
-    else if(nk.startsWith(nq)) score+=200;
-    else if(nk.includes(nq)) score+=120;
-    else if(nq.includes(nk) && nk.length>=2) score+=80;
+    if(nk===nq){ score+=450; }
+    else if(nk.startsWith(nq)){ score+=220; }
+    else if(nk.includes(nq)){ score+=140; }
+    else if(nq.includes(nk) && nk.length>=2){ score+=90; }
+    else {
+      // トークンでもキーワード照合
+      for(const tk of tokens){
+        if(tk.length>=2 && nk.includes(tk)){ score+=70; break; }
+      }
+    }
   }
-  // ブランド一致
-  if(nBrand && nBrand.includes(nq)) score+=150;
-  // カテゴリ一致
-  if(normalizeSearchText(item.cat).includes(nq)) score+=60;
-  // 使用頻度ボーナス
+
+  // 4. ブランド一致
+  if(nBrand && (nBrand.includes(nq)||nq.includes(nBrand))) score+=160;
+
+  // 5. カテゴリ一致
+  if(nCat){
+    if(nCat.includes(nq)) score+=80;
+    else for(const tk of tokens){ if(tk.length>=2 && nCat.includes(tk)){ score+=50; break; } }
+  }
+
+  // 6. 使用頻度ボーナス
   if(score>0 && usage[name]) score+=Math.min(usage[name]*15,150);
-  // 短い名前を優先（同点時）
-  if(score>0) score+=Math.max(0,30-name.length);
+
+  // 7. 標準サイズを優先（「茶碗1杯」「並」「1個」「1杯」等の基本量）
+  if(score>0){
+    if(/茶碗1杯|1人前|並|1杯|1個|100g|1切れ/.test(name)) score+=12;
+    if(/大盛|特盛|Mサイズ|2倍|2個|半分/.test(name)) score-=8;
+  }
+
+  // 8. 短い名前を優先（同点時の調整）
+  if(score>0) score+=Math.max(0,30-item.nameLen);
+
   return score;
 }
 
@@ -2078,11 +2172,12 @@ function searchFoods(query){
   if(!_foodIndex) buildFoodIndex();
   const nq=normalizeSearchText(query);
   if(!nq) return [];
+  const tokens=tokenizeQuery(nq);
   const usage=getUsageBoost();
   const scored=[];
   for(const item of _foodIndex){
     if(activeCat!=='all' && item.cat.split('・')[0]!==activeCat && !item.cat.includes(activeCat)) continue;
-    const s=getFoodSearchScore(item,nq,usage);
+    const s=getFoodSearchScore(item,nq,tokens,usage);
     if(s>0) scored.push({food:FOOD_DB[item.idx], score:s});
   }
   scored.sort((a,b)=>b.score-a.score);
