@@ -946,12 +946,12 @@ select option { background: #fff; }
         <div class="search-wrap">
           <div class="search-input-box">
             <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
-            <input type="text" id="f-search" placeholder="例：おからハンバーグ、torimune、低糖質カレー" oninput="onFoodSearch(event)" autocomplete="off">
+            <input type="text" id="f-search" placeholder="例：鶏むね、セブン、ひじき、定食、王将" oninput="onFoodSearch(event)" autocomplete="off">
           </div>
           <div id="search-results"></div>
         </div>
         <div class="cat-scroll" id="cat-scroll" style="margin-top:11px;"></div>
-        <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5;">💡 登録されていない自炊メニューも入力すると、AIが栄養を概算します</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5;">💡 自炊メニュー・コンビニ・外食チェーン名もヒットします。見つからない場合はAIが栄養を概算します</div>
       </div>
 
       <!-- ④⑤ 最近・よく食べる・お気に入り・おすすめ -->
@@ -963,6 +963,15 @@ select option { background: #fff; }
           <button class="chart-tab" onclick="switchQuick('recommend',event)">✨ おすすめ</button>
         </div>
         <div id="quick-list"></div>
+      </div>
+
+      <!-- マイ食品（カスタム登録） -->
+      <div class="card">
+        <div class="card-title-row">
+          <div class="card-title">📦 マイ食品</div>
+          <button class="btn-sm btn-outline" style="border:none;color:var(--accent);padding:4px 8px;" onclick="openCustomFoodModal()">＋ 新規登録</button>
+        </div>
+        <div id="custom-food-list"></div>
       </div>
 
       <!-- ⑥〜⑩ 入力（タイミング→量→栄養→プレビュー→記録） -->
@@ -1392,6 +1401,42 @@ select option { background: #fff; }
   </div>
 </div>
 
+<!-- マイ食品登録モーダル -->
+<div class="input-modal-overlay" id="custom-food-modal" onclick="if(event.target===this)closeCustomFoodModal()">
+  <div class="input-modal" style="max-width:360px;text-align:left;">
+    <div style="text-align:center;margin-bottom:12px;">
+      <div style="font-size:32px;margin-bottom:4px;">📦</div>
+      <div class="input-modal-title" id="cf-modal-title">マイ食品を登録</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="form-group"><label>食品名 <span style="color:var(--accent)">必須</span></label><input type="text" id="cf-name" placeholder="例：自家製プロテインボウル"></div>
+      <div class="form-row">
+        <div class="form-group"><label>カロリー (kcal) <span style="color:var(--accent)">必須</span></label><input type="number" id="cf-cal" placeholder="350" min="0" inputmode="decimal"></div>
+        <div class="form-group"><label>タンパク質 (g)</label><input type="number" id="cf-p" placeholder="30" min="0" step="0.1" inputmode="decimal"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>脂質 (g)</label><input type="number" id="cf-f" placeholder="10" min="0" step="0.1" inputmode="decimal"></div>
+        <div class="form-group"><label>炭水化物 (g)</label><input type="number" id="cf-c" placeholder="30" min="0" step="0.1" inputmode="decimal"></div>
+      </div>
+      <div class="form-group">
+        <label>カテゴリ</label>
+        <div class="chip-row" id="cf-cat-chips">
+          <button class="chip active" data-cfcat="自炊" onclick="selectCfCat('自炊')">🏠 自炊</button>
+          <button class="chip" data-cfcat="プロテイン" onclick="selectCfCat('プロテイン')">💪 プロテイン</button>
+          <button class="chip" data-cfcat="外食" onclick="selectCfCat('外食')">🍔 外食</button>
+          <button class="chip" data-cfcat="間食" onclick="selectCfCat('間食')">🍪 間食</button>
+        </div>
+      </div>
+      <div class="form-group"><label>メモ・キーワード（任意）</label><input type="text" id="cf-memo" placeholder="検索用キーワードやメモ"></div>
+      <input type="hidden" id="cf-edit-id" value="">
+      <div class="input-modal-btns">
+        <button class="btn-outline" onclick="closeCustomFoodModal()">キャンセル</button>
+        <button class="btn" onclick="saveCustomFood()">💾 保存する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -1418,7 +1463,7 @@ const defaultState = {
   foods: [], weights: [], mode: 'standard',
   goals: { height:165, weight:70, target:63, kcal:1600, protein:80, fat:50, carb:200,
            water:2000, steps:8000, sleep:7 },   // v6: 水分(ml)・歩数・睡眠(h)目標
-  exercises: [], favorites: [], gamify: { xp:0, badges:[] },
+  exercises: [], favorites: [], customFoods: [], gamify: { xp:0, badges:[] },
   // ↓ v6新フィールド（日付キーの記録。既存データには無いので補完される）
   daily: {}   // { 'YYYY-MM-DD': { water:1500, steps:6000, sleep:7, bowel:true, condition:'', conditionMemo:'' } }
 };
@@ -1435,6 +1480,7 @@ function loadState(){
       goals: { ...defaultState.goals, ...(parsed.goals||{}) },
       exercises: parsed.exercises || [],
       favorites: parsed.favorites || [],
+      customFoods: parsed.customFoods || [],
       gamify: { xp:0, badges:[], ...(parsed.gamify||{}) },
       daily: parsed.daily || {},
     };
@@ -1689,6 +1735,92 @@ const FOOD_DB = [
   {n:"おにぎり（ツナマヨ）",cal:234,p:5,f:7,c:37,cat:"主食",brand:"",kw:"onigiri tuna つなまよ おむすび"},
   {n:"サラダうどん",cal:350,p:12,f:6,c:62,cat:"麺類",brand:"",kw:"salad udon さらだうどん"},
   {n:"プロテインヨーグルト",cal:100,p:11,f:0,c:14,cat:"乳製品・プロテイン",brand:"",kw:"protein yogurt ぷろていんよーぐると"},
+
+  // ===== 筋トレ系・高タンパク食品 =====
+  {n:"サラダチキン（プレーン・110g）",cal:113,p:25,f:1.5,c:0.8,cat:"プロテイン",brand:"",kw:"salad chicken さらだちきん プレーン むね"},
+  {n:"サラダチキン（スモーク）",cal:120,p:24,f:2,c:1.5,cat:"プロテイン",brand:"",kw:"salad chicken さらだちきん スモーク 燻製"},
+  {n:"サラダチキン（タンドリー）",cal:125,p:23,f:2.5,c:2,cat:"プロテイン",brand:"",kw:"salad chicken さらだちきん タンドリー"},
+  {n:"サラダチキンバー",cal:65,p:12,f:1.2,c:1,cat:"プロテイン",brand:"",kw:"salad chicken bar さらだちきんばー スティック"},
+  {n:"鶏むね肉（皮なし・150g焼き）",cal:248,p:39,f:7.5,c:0,cat:"肉・プロテイン",brand:"",kw:"chicken breast torimune むねにく 皮なし 焼き グリル"},
+  {n:"鶏むね肉（皮なし・茹で・100g）",cal:108,p:22,f:1.5,c:0,cat:"肉・プロテイン",brand:"",kw:"chicken breast torimune むねにく 茹で ゆで ボイル"},
+  {n:"ささみスティック（2本）",cal:70,p:15,f:0.5,c:1,cat:"プロテイン",brand:"",kw:"sasami ささみ スティック"},
+  {n:"プロテインドリンク（紙パック）",cal:95,p:15,f:0,c:10,cat:"プロテイン",brand:"",kw:"protein drink ぷろていん ドリンク 紙パック ザバス savas"},
+  {n:"inバー プロテイン",cal:209,p:16,f:10,c:15,cat:"プロテイン",brand:"inバー",kw:"inbar いんばー ウイダー weider ぷろていんばー"},
+  {n:"1本満足バー PROTEIN",cal:183,p:15,f:8.5,c:12,cat:"プロテイン",brand:"1本満足",kw:"ipponmanzoku いっぽんまんぞく ぷろていん プロテインバー"},
+  {n:"マイプロテイン（1杯・水）",cal:103,p:21,f:1.9,c:1,cat:"プロテイン",brand:"マイプロテイン",kw:"myprotein まいぷろていん ホエイ whey"},
+  {n:"ゴールドスタンダード（1杯）",cal:120,p:24,f:1,c:3,cat:"プロテイン",brand:"ON",kw:"gold standard ごーるどすたんだーど おぷちまむ ON"},
+  {n:"プロテインパンケーキ（2枚）",cal:200,p:20,f:5,c:18,cat:"プロテイン",brand:"",kw:"protein pancake ぷろていんぱんけーき"},
+  {n:"EAA（1杯）",cal:15,p:4,f:0,c:0,cat:"プロテイン",brand:"",kw:"eaa いーえーえー 必須アミノ酸"},
+  {n:"クレアチン（1杯）",cal:0,p:0,f:0,c:0,cat:"プロテイン",brand:"",kw:"creatine くれあちん"},
+  {n:"砂肝（100g）",cal:94,p:18,f:1.8,c:0,cat:"肉・プロテイン",brand:"",kw:"sunagimo すなぎも 砂ずり"},
+  {n:"ラム肉（100g）",cal:198,p:20,f:13,c:0,cat:"肉・プロテイン",brand:"",kw:"lamb ラム らむ ジンギスカン"},
+  {n:"馬肉（100g）",cal:110,p:20,f:2.5,c:0.3,cat:"肉・プロテイン",brand:"",kw:"horse basashi ばさし 馬刺し うまにく"},
+  {n:"カッテージチーズ（100g）",cal:105,p:13,f:4.5,c:1.9,cat:"乳製品・プロテイン",brand:"",kw:"cottage cheese かってーじちーず"},
+  {n:"スキムミルク（200ml）",cal:70,p:7,f:0.2,c:10,cat:"乳製品・プロテイン",brand:"",kw:"skim milk すきむみるく 脱脂粉乳 だっしふんにゅう"},
+  {n:"タンパクオトメ（1杯）",cal:56,p:11,f:0.5,c:2,cat:"プロテイン",brand:"",kw:"tanpakuotome たんぱくおとめ プロテイン 女性向け"},
+
+  // ===== 自炊メニュー（和食の定番おかず） =====
+  {n:"ひじきの煮物（1皿）",cal:60,p:2,f:2,c:8,cat:"和食",brand:"",kw:"hijiki ひじき にもの 煮物 常備菜"},
+  {n:"切り干し大根の煮物",cal:80,p:3,f:2.5,c:12,cat:"和食",brand:"",kw:"kiriboshi きりぼしだいこん 切干 煮物 常備菜"},
+  {n:"筑前煮（1皿）",cal:170,p:10,f:5,c:22,cat:"和食",brand:"",kw:"chikuzenni ちくぜんに がめ煮 煮しめ にしめ 煮物"},
+  {n:"肉じゃが（1皿・大）",cal:350,p:15,f:14,c:40,cat:"和食",brand:"",kw:"nikujaga にくじゃが 肉じゃが"},
+  {n:"肉豆腐（1皿）",cal:250,p:20,f:14,c:12,cat:"和食",brand:"",kw:"nikudofu にくどうふ 肉豆腐 すき煮"},
+  {n:"高野豆腐の煮物（2個）",cal:120,p:10,f:7,c:4,cat:"和食",brand:"",kw:"koya koyadofu こうやどうふ 凍り豆腐 煮物"},
+  {n:"卯の花（おから煮）",cal:90,p:5,f:4,c:9,cat:"和食",brand:"",kw:"unohana うのはな おからに おから 煮物"},
+  {n:"五目豆（1皿）",cal:100,p:6,f:3,c:13,cat:"和食",brand:"",kw:"gomokumame ごもくまめ 五目豆 煮豆"},
+  {n:"白和え（1皿）",cal:90,p:5,f:5,c:6,cat:"和食",brand:"",kw:"shiraae しらあえ 白あえ"},
+  {n:"煮魚（1切れ）",cal:160,p:18,f:6,c:8,cat:"和食",brand:"",kw:"nizakana にざかな 煮魚 煮付け にづけ 鯖味噌"},
+  {n:"鯖の味噌煮（1切れ）",cal:220,p:20,f:12,c:10,cat:"和食",brand:"",kw:"saba miso さばのみそに 鯖味噌 さばみそ"},
+  {n:"もやし炒め",cal:70,p:3,f:4,c:5,cat:"野菜",brand:"",kw:"moyashi もやし いため 炒め"},
+  {n:"もやしナムル",cal:50,p:2,f:3,c:4,cat:"野菜",brand:"",kw:"moyashi namul もやしなむる"},
+  {n:"ほうれん草の胡麻和え",cal:50,p:3,f:2.5,c:4,cat:"野菜",brand:"",kw:"horenso ほうれんそう ごまあえ 胡麻和え"},
+  {n:"小松菜のおひたし",cal:20,p:2,f:0.3,c:2,cat:"野菜",brand:"",kw:"komatsuna こまつな おひたし"},
+  {n:"レンコンのきんぴら",cal:100,p:2,f:4,c:14,cat:"野菜",brand:"",kw:"renkon れんこん きんぴら"},
+  {n:"里芋の煮っころがし",cal:120,p:2,f:2,c:24,cat:"和食",brand:"",kw:"satoimo さといも 煮っころがし にっころがし"},
+  {n:"大根の煮物",cal:50,p:1.5,f:0.5,c:10,cat:"和食",brand:"",kw:"daikon だいこん 煮物 ふろふき おでん"},
+  {n:"豚の角煮（2切れ）",cal:350,p:18,f:26,c:10,cat:"和食",brand:"",kw:"kakuni かくに 角煮 ぶたのかくに ラフテー"},
+  {n:"鶏の照り焼き",cal:280,p:24,f:14,c:12,cat:"和食",brand:"",kw:"teriyaki てりやき 照り焼き 鶏 チキン"},
+  {n:"かきたま汁",cal:45,p:3,f:2,c:3,cat:"和食",brand:"",kw:"kakitama かきたまじる 卵スープ たまごスープ"},
+  {n:"わかめスープ",cal:15,p:1,f:0.5,c:1.5,cat:"和食",brand:"",kw:"wakame わかめすーぷ スープ 海藻"},
+  {n:"卵焼き（甘め・2切れ）",cal:100,p:6,f:6,c:6,cat:"和食",brand:"",kw:"tamagoyaki たまごやき 卵焼き だし巻き だしまき 出汁巻き"},
+  {n:"茶碗蒸し",cal:80,p:7,f:4,c:4,cat:"和食",brand:"",kw:"chawanmushi ちゃわんむし 茶碗むし"},
+  {n:"回鍋肉（ホイコーロー）",cal:300,p:16,f:20,c:12,cat:"中華",brand:"",kw:"hoikoro ほいこーろー ホイコーロー 回鍋肉 キャベツ"},
+  {n:"青椒肉絲（チンジャオロース）",cal:250,p:18,f:16,c:8,cat:"中華",brand:"",kw:"chinjao ちんじゃおろーす チンジャオ ピーマン"},
+  {n:"八宝菜",cal:200,p:14,f:10,c:14,cat:"中華",brand:"",kw:"happousai はっぽうさい 八宝菜 中華丼"},
+
+  // ===== コンビニ・外食チェーン追加 =====
+  {n:"【セブン】たんぱく質が摂れるチキン＆エッグ",cal:260,p:28,f:12,c:10,cat:"コンビニ",brand:"セブンイレブン",kw:"seven 7 せぶん たんぱくしつ チキン エッグ サンド"},
+  {n:"【セブン】たんぱく質が摂れる鶏むね肉サラダ",cal:140,p:22,f:4,c:5,cat:"コンビニ",brand:"セブンイレブン",kw:"seven 7 せぶん たんぱくしつ むね サラダ"},
+  {n:"【セブン】おにぎりツナマヨ",cal:230,p:5,f:7,c:37,cat:"コンビニ",brand:"セブンイレブン",kw:"seven 7 せぶん おにぎり ツナマヨ"},
+  {n:"【セブン】手巻おにぎり梅",cal:170,p:4,f:1,c:36,cat:"コンビニ",brand:"セブンイレブン",kw:"seven 7 せぶん おにぎり うめ 梅"},
+  {n:"【セブン】のり弁当",cal:680,p:18,f:22,c:100,cat:"コンビニ",brand:"セブンイレブン",kw:"seven 7 せぶん のりべん 弁当"},
+  {n:"【ファミマ】お母さん食堂シリーズ",cal:150,p:10,f:8,c:8,cat:"コンビニ",brand:"ファミリーマート",kw:"famima ふぁみま おかあさん 惣菜 そうざい"},
+  {n:"【ファミマ】グリルチキン",cal:130,p:22,f:3,c:3,cat:"コンビニ",brand:"ファミリーマート",kw:"famima ふぁみま グリルチキン 鶏 ぐりる"},
+  {n:"【ファミマ】スーパー大麦おにぎり",cal:185,p:5,f:2,c:37,cat:"コンビニ",brand:"ファミリーマート",kw:"famima ふぁみま おにぎり 大麦 スーパー"},
+  {n:"【ローソン】プロテイン入りドリンク",cal:90,p:15,f:0,c:8,cat:"コンビニ",brand:"ローソン",kw:"lawson ろーそん プロテイン ドリンク"},
+  {n:"【ローソン】サラダチキンバー",cal:65,p:12,f:1,c:1,cat:"コンビニ",brand:"ローソン",kw:"lawson ろーそん さらだちきんばー バー"},
+  {n:"【ローソン】たまごサンド",cal:310,p:10,f:18,c:28,cat:"コンビニ",brand:"ローソン",kw:"lawson ろーそん たまごさんど 卵 サンドイッチ"},
+  {n:"【すき家】牛丼ライト",cal:380,p:20,f:16,c:40,cat:"外食",brand:"すき家",kw:"sukiya すきや ライト 豆腐 牛丼"},
+  {n:"【松屋】定食（生姜焼き）",cal:780,p:30,f:28,c:95,cat:"外食",brand:"松屋",kw:"matsuya まつや しょうがやき 定食"},
+  {n:"【なか卯】親子丼（並）",cal:650,p:28,f:16,c:88,cat:"外食",brand:"なか卯",kw:"nakau なかう 親子丼 おやこどん"},
+  {n:"【大戸屋】チキンかあさん煮定食",cal:780,p:35,f:22,c:95,cat:"外食",brand:"大戸屋",kw:"ootoya おおとや 定食 チキン かあさん"},
+  {n:"【大戸屋】しまほっけ定食",cal:550,p:32,f:16,c:65,cat:"外食",brand:"大戸屋",kw:"ootoya おおとや ほっけ 定食"},
+  {n:"【やよい軒】しょうが焼き定食",cal:800,p:28,f:30,c:100,cat:"外食",brand:"やよい軒",kw:"yayoiken やよいけん しょうがやき 定食"},
+  {n:"【やよい軒】チキン南蛮定食",cal:900,p:32,f:38,c:105,cat:"外食",brand:"やよい軒",kw:"yayoiken やよいけん チキン南蛮 なんばん 定食"},
+  {n:"【餃子の王将】餃子（6個）",cal:340,p:12,f:17,c:34,cat:"外食",brand:"王将",kw:"ohsho おうしょう 王将 餃子 ぎょうざ"},
+  {n:"【餃子の王将】天津飯",cal:560,p:18,f:20,c:75,cat:"外食",brand:"王将",kw:"ohsho おうしょう 王将 天津飯 てんしんはん"},
+  {n:"【リンガーハット】長崎ちゃんぽん",cal:650,p:26,f:22,c:82,cat:"外食",brand:"リンガーハット",kw:"ringer りんがー ちゃんぽん 長崎"},
+  {n:"【かつや】カツ丼（梅）",cal:870,p:30,f:30,c:115,cat:"外食",brand:"かつや",kw:"katsuya かつや カツ丼 かつどん"},
+  {n:"【天丼てんや】天丼（並）",cal:700,p:20,f:20,c:108,cat:"外食",brand:"てんや",kw:"tenya てんや 天丼 てんどん"},
+  {n:"【はま寿司】寿司5皿（10貫）",cal:500,p:30,f:8,c:78,cat:"外食",brand:"はま寿司",kw:"hamasushi はまずし はますし 寿司 すし 回転"},
+  {n:"【スシロー】寿司5皿（10貫）",cal:500,p:30,f:8,c:78,cat:"外食",brand:"スシロー",kw:"sushiro すしろー 寿司 すし 回転"},
+  {n:"【バーミヤン】五目チャーハン",cal:630,p:15,f:22,c:90,cat:"外食",brand:"バーミヤン",kw:"bamiyan ばーみやん チャーハン ちゃーはん"},
+  {n:"【コメダ】モーニングセット",cal:480,p:14,f:18,c:62,cat:"外食",brand:"コメダ珈琲",kw:"komeda こめだ モーニング 朝食"},
+  {n:"【すき家】高たんぱく牛丼の具",cal:230,p:22,f:14,c:4,cat:"外食",brand:"すき家",kw:"sukiya すきや 高たんぱく 牛丼 プロテイン"},
+  {n:"コンビニおでん（大根＋卵＋こんにゃく）",cal:110,p:8,f:5,c:7,cat:"コンビニ",brand:"",kw:"oden おでん だいこん たまご こんにゃく コンビニ"},
+  {n:"コンビニサラダ（ドレッシング込み）",cal:120,p:4,f:7,c:10,cat:"コンビニ",brand:"",kw:"salad さらだ コンビニ ドレッシング"},
+  {n:"コンビニ弁当（幕の内）",cal:700,p:20,f:22,c:100,cat:"コンビニ",brand:"",kw:"bento べんとう まくのうち コンビニ 弁当"},
+  {n:"コンビニ冷やし中華",cal:420,p:16,f:10,c:65,cat:"コンビニ",brand:"",kw:"hiyashi ひやしちゅうか コンビニ 冷やし"},
 ];
 
 
@@ -2070,10 +2202,18 @@ function tokenizeQuery(nq){
   const tokens=new Set();
   if(nq) tokens.add(nq);
   // よくある接尾語を分離して語幹も検索対象に（鶏肉→鶏、牛肉→牛 など）
-  const suffixes=['肉','料理','定食','弁当','丼','焼き','焼','煮','炒め','揚げ','蒸し'];
+  const suffixes=['肉','料理','定食','弁当','丼','焼き','焼','煮','炒め','揚げ','蒸し','もの','物','サラダ','スープ','汁','和え','あえ'];
   for(const suf of suffixes){
     if(nq.length>suf.length && nq.endsWith(suf)){
       tokens.add(nq.slice(0,nq.length-suf.length));
+    }
+  }
+  // よくある接頭語を分離（焼き鮭→鮭、煮魚→魚）
+  const prefixes=['焼き','焼','煮','蒸し','揚げ','茹で','ゆで','生','冷','温'];
+  for(const pre of prefixes){
+    if(nq.length>pre.length && nq.startsWith(pre)){
+      const stem=nq.slice(pre.length);
+      if(stem.length>=1) tokens.add(stem);
     }
   }
   // 2文字以上なら、連続する2-gramも候補に（語順違い・複合語対策）
@@ -2084,7 +2224,7 @@ function tokenizeQuery(nq){
 let _foodIndex=null;
 function buildFoodIndex(){
   _foodIndex=FOOD_DB.map((f,idx)=>({
-    idx,
+    idx, src:'db',
     name:f.n,
     nName:normalizeSearchText(f.n),
     nKw:(f.kw||'').split(/\s+/).map(k=>normalizeSearchText(k)).filter(Boolean),
@@ -2093,6 +2233,19 @@ function buildFoodIndex(){
     cat:f.cat,
     nameLen:f.n.length,
   }));
+  // マイ食品もインデックスに追加
+  state.customFoods.forEach((f,idx)=>{
+    _foodIndex.push({
+      idx, src:'custom',
+      name:f.n,
+      nName:normalizeSearchText(f.n),
+      nKw:(f.kw||'').split(/\s+/).map(k=>normalizeSearchText(k)).filter(Boolean),
+      nBrand:'',
+      nCat:normalizeSearchText(f.cat||''),
+      cat:f.cat||'自炊',
+      nameLen:f.n.length,
+    });
+  });
 }
 
 /* --- 使用頻度マップ（よく食べる/最近を上位化） --- */
@@ -2116,6 +2269,14 @@ function getFoodSearchScore(item, nq, tokens, usage){
   else if(nName.startsWith(nq)) score+=600;           // 前方一致
   else if(nName.includes(nq)) score+=400;             // 部分一致（クエリ⊂名前）
   else if(nq.includes(nName) && nName.length>=2) score+=250; // 逆部分一致（名前⊂クエリ）
+
+  // 1.5. 2-gram部分一致（1文字ずれでもヒット：「にく」で「ぶたにく」等）
+  if(score===0 && nq.length>=2){
+    for(let i=0;i<=nq.length-2;i++){
+      const gram=nq.slice(i,i+2);
+      if(nName.includes(gram)){ score+=Math.min(200, 80+gram.length*30); break; }
+    }
+  }
 
   // 2. トークン（語幹）一致：鶏肉→鶏、味噌汁→味噌 など
   if(score===0){
@@ -2141,10 +2302,23 @@ function getFoodSearchScore(item, nq, tokens, usage){
         if(tk.length>=2 && nk.includes(tk)){ score+=70; break; }
       }
     }
+    // 2-gramでキーワード照合（ローマ字の打ち間違い等に対応）
+    if(score===0 && nq.length>=2){
+      for(let i=0;i<=nq.length-2;i++){
+        const gram=nq.slice(i,i+2);
+        if(nk.includes(gram) && nk.length>=3){ score+=40; break; }
+      }
+    }
   }
 
   // 4. ブランド一致
   if(nBrand && (nBrand.includes(nq)||nq.includes(nBrand))) score+=160;
+  // ブランドの部分一致も追加（「セブン」→「せぶんいれぶん」）
+  if(score===0 && nBrand && nBrand.length>=3){
+    for(const tk of tokens){
+      if(tk.length>=2 && nBrand.includes(tk)){ score+=100; break; }
+    }
+  }
 
   // 5. カテゴリ一致
   if(nCat){
@@ -2177,11 +2351,16 @@ function searchFoods(query){
   const scored=[];
   for(const item of _foodIndex){
     if(activeCat!=='all' && item.cat.split('・')[0]!==activeCat && !item.cat.includes(activeCat)) continue;
-    const s=getFoodSearchScore(item,nq,tokens,usage);
-    if(s>0) scored.push({food:FOOD_DB[item.idx], score:s});
+    let s=getFoodSearchScore(item,nq,tokens,usage);
+    // マイ食品には+200のボーナス（優先表示）
+    if(s>0 && item.src==='custom') s+=200;
+    if(s>0){
+      const food = item.src==='custom' ? state.customFoods[item.idx] : FOOD_DB[item.idx];
+      scored.push({food, score:s, src:item.src});
+    }
   }
   scored.sort((a,b)=>b.score-a.score);
-  return scored.slice(0,12).map(x=>x.food);
+  return scored.slice(0,16);
 }
 
 /* ============================================================
@@ -2209,6 +2388,20 @@ const NUTRITION_RULES = {
     { keys:['こんにゃく','蒟蒻','konjac','konnyaku'], cal:8, p:0.2, f:0, c:3, tag:'超低カロリー' },
     { keys:['キャベツ','野菜','salad','サラダ','yasai'], cal:30, p:2, f:0.3, c:6, tag:'低カロリー' },
     { keys:['プロテイン','protein'], cal:120, p:24, f:2, c:5, tag:'高タンパク' },
+    // 追加食材
+    { keys:['豚ひき','合いびき','ひき肉','ミンチ','mince','ground'], cal:230, p:17, f:17, c:1, tag:'ひき肉料理' },
+    { keys:['牛肉','ぎゅうにく','beef'], cal:200, p:20, f:13, c:0, tag:'高タンパク' },
+    { keys:['豚肉','ぶたにく','pork'], cal:230, p:18, f:17, c:0, tag:'タンパク質豊富' },
+    { keys:['エビ','えび','海老','shrimp','prawn'], cal:80, p:18, f:0.5, c:0, tag:'低脂質高タンパク' },
+    { keys:['もやし','moyashi'], cal:14, p:1.7, f:0.1, c:2.6, tag:'超低カロリー' },
+    { keys:['ブロッコリー','broccoli'], cal:33, p:4.3, f:0.5, c:5.2, tag:'高タンパク野菜' },
+    { keys:['ほうれん草','spinach','ほうれんそう'], cal:20, p:2.2, f:0.4, c:3, tag:'鉄分豊富' },
+    { keys:['ひじき','hijiki'], cal:10, p:1, f:0.1, c:1.5, tag:'食物繊維・ミネラル' },
+    { keys:['切り干し','切干','kiriboshi'], cal:280, p:9, f:0.5, c:49, tag:'食物繊維豊富' },
+    { keys:['高野豆腐','こうやどうふ','koya'], cal:500, p:50, f:33, c:4, tag:'超高タンパク' },
+    { keys:['アボカド','avocado'], cal:187, p:2.5, f:17.5, c:7.5, tag:'良質な脂質' },
+    { keys:['チーズ','cheese','ちーず'], cal:340, p:23, f:26, c:1.3, tag:'高タンパク高脂質' },
+    { keys:['ヨーグルト','yogurt','よーぐると'], cal:62, p:3.6, f:3, c:5, tag:'プロバイオティクス' },
   ],
   // 料理タイプ（ベースが無い場合の主成分推定）
   dishes: [
@@ -2230,6 +2423,26 @@ const NUTRITION_RULES = {
     { keys:['揚げ','フライ','から揚げ','唐揚げ','fry','fried'], cal:350, p:18, f:22, c:18, base:'1人前', icon:'🍤' },
     { keys:['ケーキ','cake','スイーツ'], cal:340, p:5, f:18, c:40, base:'1個', icon:'🍰' },
     { keys:['ステーキ','steak'],    cal:380, p:33, f:26, c:1, base:'1枚', icon:'🥩' },
+    // 追加料理タイプ
+    { keys:['煮物','にもの','煮付','にづけ','煮しめ'], cal:120, p:6, f:3, c:16, base:'1皿', icon:'🍲' },
+    { keys:['和え物','あえもの','おひたし','ごまあえ','白和え'], cal:50, p:3, f:2, c:5, base:'1皿', icon:'🥗' },
+    { keys:['酢の物','すのもの','なます','きゅうりの酢の物'], cal:40, p:1, f:0.3, c:8, base:'1皿', icon:'🥒' },
+    { keys:['天ぷら','てんぷら','tempura'], cal:400, p:15, f:22, c:35, base:'1人前', icon:'🍤' },
+    { keys:['コロッケ','croquette','ころっけ'], cal:200, p:5, f:11, c:22, base:'1個', icon:'🍤' },
+    { keys:['餃子','ぎょうざ','gyoza'], cal:250, p:10, f:12, c:24, base:'5個', icon:'🥟' },
+    { keys:['チキン南蛮','なんばん'], cal:450, p:26, f:28, c:22, base:'1人前', icon:'🍗' },
+    { keys:['照り焼き','てりやき','teriyaki'], cal:280, p:24, f:14, c:12, base:'1人前', icon:'🍗' },
+    { keys:['肉じゃが','にくじゃが','nikujaga'], cal:280, p:12, f:10, c:35, base:'1皿', icon:'🍲' },
+    { keys:['筑前煮','ちくぜんに','がめ煮'], cal:170, p:10, f:5, c:22, base:'1皿', icon:'🍲' },
+    { keys:['豚汁','とんじる','ぶたじる'], cal:130, p:7, f:6, c:12, base:'1杯', icon:'🍲' },
+    { keys:['ちゃんぽん','chanpon'], cal:650, p:26, f:22, c:82, base:'1杯', icon:'🍜' },
+    { keys:['お好み焼き','おこのみ','okonomiyaki'], cal:500, p:16, f:22, c:58, base:'1枚', icon:'🥞' },
+    { keys:['たこ焼き','たこやき','takoyaki'], cal:300, p:10, f:12, c:38, base:'8個', icon:'🍡' },
+    { keys:['オムライス','omrice','おむらいす'], cal:580, p:18, f:22, c:78, base:'1皿', icon:'🍳' },
+    { keys:['グラタン','ドリア','gratin','doria'], cal:450, p:16, f:24, c:40, base:'1皿', icon:'🧀' },
+    { keys:['リゾット','risotto','おかゆ','おじや','雑炊'], cal:300, p:10, f:8, c:48, base:'1杯', icon:'🍚' },
+    { keys:['ナムル','namul'], cal:50, p:2, f:3, c:4, base:'1皿', icon:'🥗' },
+    { keys:['キムチチゲ','チゲ','鍋','なべ','hot pot'], cal:350, p:22, f:16, c:25, base:'1人前', icon:'🍲' },
   ],
   // 修飾語（補正）
   modifiers: [
@@ -2379,10 +2592,34 @@ function renderFoodSearchResults(results, query){
   const q=(query||'').trim();
   let html='';
 
+  // results は [{food, score, src}, ...] の形式
+  const customResults=results.filter(r=>r.src==='custom');
+  const dbResults=results.filter(r=>r.src==='db');
+
+  // 【マイ食品】グループ
+  if(customResults.length){
+    html+=`<div class="result-group-head">📦 マイ食品</div>`;
+    html+=customResults.map(r=>{
+      const f=r.food;
+      const enc=encodeURIComponent(f.n);
+      return `<div class="result-item" style="border-left:3px solid var(--accent);" onclick="quickAdd('${enc}',${f.cal},${f.p},${f.f},${f.c})">
+        <div class="result-left">
+          <span class="result-cat-icon">📦</span>
+          <div style="min-width:0;">
+            <div class="result-name">${f.n}</div>
+            <div class="result-meta">P${f.p} F${f.f} C${f.c}</div>
+          </div>
+        </div>
+        <span class="result-cal">${f.cal}<small>kcal</small></span>
+      </div>`;
+    }).join('');
+  }
+
   // 【登録済み食品】グループ
-  if(results.length){
+  if(dbResults.length){
     html+=`<div class="result-group-head">📋 登録済み食品</div>`;
-    html+=results.map(f=>{
+    html+=dbResults.map(r=>{
+      const f=r.food;
       const idx=FOOD_DB.indexOf(f);
       return `<div class="result-item" onclick="pickFood(${idx})">
         <div class="result-left">
@@ -2398,7 +2635,8 @@ function renderFoodSearchResults(results, query){
   }
 
   // 【AI推定】グループ（DB完全一致が少ない・無い場合に生成）
-  const exactMatch=results.some(f=>normalizeSearchText(f.n)===normalizeSearchText(q));
+  const allFoods=[...customResults,...dbResults];
+  const exactMatch=allFoods.some(r=>normalizeSearchText(r.food.n)===normalizeSearchText(q));
   if(q.length>=2 && !exactMatch){
     const aiCandidates=generateEstimatedFoodCandidates(q);
     if(aiCandidates.length){
@@ -2864,6 +3102,109 @@ function fillFromQuick(nameEnc,cal,p,f,c){
 }
 
 /* ============================================================
+   マイ食品（カスタム食品登録）
+   ============================================================ */
+let cfSelectedCat='自炊';
+function selectCfCat(cat){
+  cfSelectedCat=cat;
+  document.querySelectorAll('#cf-cat-chips .chip').forEach(c=>c.classList.toggle('active',c.dataset.cfcat===cat));
+}
+
+function openCustomFoodModal(editId){
+  const modal=document.getElementById('custom-food-modal');
+  document.getElementById('cf-edit-id').value=editId||'';
+  if(editId){
+    const item=state.customFoods.find(f=>f.id==editId);
+    if(item){
+      document.getElementById('cf-modal-title').textContent='マイ食品を編集';
+      document.getElementById('cf-name').value=item.n;
+      document.getElementById('cf-cal').value=item.cal;
+      document.getElementById('cf-p').value=item.p||'';
+      document.getElementById('cf-f').value=item.f||'';
+      document.getElementById('cf-c').value=item.c||'';
+      document.getElementById('cf-memo').value=item.kw||'';
+      selectCfCat(item.cat||'自炊');
+    }
+  } else {
+    document.getElementById('cf-modal-title').textContent='マイ食品を登録';
+    ['cf-name','cf-cal','cf-p','cf-f','cf-c','cf-memo'].forEach(id=>document.getElementById(id).value='');
+    selectCfCat('自炊');
+  }
+  modal.classList.add('show');
+  setTimeout(()=>document.getElementById('cf-name').focus(),100);
+}
+
+function closeCustomFoodModal(){
+  document.getElementById('custom-food-modal').classList.remove('show');
+}
+
+function saveCustomFood(){
+  const name=document.getElementById('cf-name').value.trim();
+  const cal=parseFloat(document.getElementById('cf-cal').value)||0;
+  if(!name){ showToast('食品名を入力してください','error'); return; }
+  if(!cal){ showToast('カロリーを入力してください','error'); return; }
+  const p=parseFloat(document.getElementById('cf-p').value)||0;
+  const f=parseFloat(document.getElementById('cf-f').value)||0;
+  const c=parseFloat(document.getElementById('cf-c').value)||0;
+  const kw=document.getElementById('cf-memo').value.trim();
+  const editId=document.getElementById('cf-edit-id').value;
+
+  if(editId){
+    const item=state.customFoods.find(x=>x.id==editId);
+    if(item){ Object.assign(item, {n:name, cal, p, f, c, cat:cfSelectedCat, kw}); }
+  } else {
+    state.customFoods.push({ id:Date.now(), n:name, cal, p, f, c, cat:cfSelectedCat, kw });
+  }
+  _foodIndex=null; // 検索インデックスを再構築させる
+  saveState();
+  closeCustomFoodModal();
+  renderCustomFoodList();
+  showToast(editId?'📦 マイ食品を更新しました':'📦 マイ食品を登録しました');
+}
+
+function deleteCustomFood(id){
+  state.customFoods=state.customFoods.filter(f=>f.id!=id);
+  _foodIndex=null;
+  saveState();
+  renderCustomFoodList();
+  showToast('マイ食品を削除しました');
+}
+
+/* 食事記録からマイ食品に登録 */
+function registerAsCustomFood(nameEnc,cal,p,f,c){
+  const name=decodeURIComponent(nameEnc);
+  // 既に登録済みならスキップ
+  if(state.customFoods.some(x=>x.n===name)){ showToast('既にマイ食品に登録されています'); return; }
+  state.customFoods.push({ id:Date.now(), n:name, cal, p, f, c, cat:'自炊', kw:'' });
+  _foodIndex=null;
+  saveState();
+  showToast(`📦 「${name}」をマイ食品に登録しました`);
+}
+
+function renderCustomFoodList(){
+  const el=document.getElementById('custom-food-list');
+  if(!el) return;
+  if(!state.customFoods.length){
+    el.innerHTML='<div class="empty-state"><span class="emoji">📦</span>マイ食品はまだありません<br><small>よく食べる自炊メニューを登録しておくと便利です</small></div>';
+    return;
+  }
+  el.innerHTML=state.customFoods.map(f=>{
+    const enc=encodeURIComponent(f.n);
+    return `<div class="food-row">
+      <div class="food-info" onclick="quickAdd('${enc}',${f.cal},${f.p},${f.f},${f.c})" style="cursor:pointer;">
+        <span class="food-name">📦 ${f.n}</span>
+        <span class="food-pfc">P${f.p} F${f.f} C${f.c}　<span style="color:var(--text3);font-size:10px;">${f.cat}</span></span>
+      </div>
+      <div class="food-right">
+        <span class="food-kcal">${f.cal}kcal</span>
+        <button class="icon-btn" onclick="openCustomFoodModal(${f.id})" title="編集"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
+        <button class="icon-btn" onclick="deleteCustomFood(${f.id})" title="削除"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
    体重
    ============================================================ */
 function addWeight(){
@@ -3150,10 +3491,13 @@ function renderFoodLog(elId,tf){
     const mcal=Math.round(sumKey(mf,'cal'));
     html+=`<div class="meal-group"><div class="meal-label-row"><span class="meal-label">${mealEmoji} ${meal}</span><span class="meal-total">${mcal} kcal</span></div>`;
     mf.forEach(f=>{
+      const enc=encodeURIComponent(f.name);
+      const isCustom=state.customFoods.some(x=>x.n===f.name);
       html+=`<div class="food-row">
         <div class="food-info"><span class="food-name">${f.name}</span><span class="food-pfc">P${f.p} F${f.f} C${f.c}</span></div>
         <div class="food-right">
           <span class="food-kcal">${f.cal}kcal</span>
+          <button class="icon-btn" title="マイ食品に登録" style="${isCustom?'color:var(--accent);':''}" onclick="registerAsCustomFood('${enc}',${f.cal},${f.p},${f.f},${f.c})"><svg viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg></button>
           <button class="icon-btn fav-btn ${isFav(f.name)?'fav-on':''}" onclick="toggleFav('${f.name.replace(/'/g,"\\'")}')"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
           <button class="icon-btn" onclick="deleteFood(${f.id})"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
         </div>
@@ -3195,6 +3539,7 @@ function chartOpts(extra={}){
 function renderFoodTab(){
   renderCatScroll();
   renderQuickList();
+  renderCustomFoodList();
   selectMeal(selectedMeal);
   syncQtyChips();
 }
